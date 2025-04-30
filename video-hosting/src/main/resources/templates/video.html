@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Просмотр видео">
+    <title th:text="${video.title} + ' | RadikTube'">Просмотр видео | RadikTube</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .video-view {
+            display: flex;
+            gap: 24px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .video-container {
+            flex: 2;
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+        }
+
+        .video-info {
+            margin-top: 16px;
+        }
+
+        .video-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .video-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .video-views {
+            color: #606060;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #8a8a8a;
+            border: none;
+            border-radius: 18px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .action-button:hover {
+            background: #e5e5e5;
+        }
+
+        .channel-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        /* Обновленные стили для аватаров */
+        .channel-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #ddd url('https://play-lh.googleusercontent.com/Irm3ZxMmSGPCZiSdNi5N3jNyvjMHQ18U2bi8B_xOLc-3dGrQhz6XtLGruGKO5_jgN_3O');
+            background-size: cover;
+        }
+
+        .channel-name {
+            font-weight: 500;
+        }
+
+        .subscribe-button {
+            margin-left: auto;
+            background: #cc0000;
+            color: white;
+            border: none;
+            border-radius: 18px;
+            padding: 10px 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .subscribe-button:hover {
+            background: #b30000;
+        }
+
+        .video-description {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            white-space: pre-line;
+        }
+
+        .comments-section {
+            margin-top: 24px;
+        }
+
+        .comments-title {
+            font-size: 1.25rem;
+            margin-bottom: 16px;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            resize: none;
+            min-height: 80px;
+        }
+
+        .comment-submit {
+            background: #065fd4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0 16px;
+            cursor: pointer;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+        }
+
+
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ddd;
+            flex-shrink: 0;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/E_Train_%281967-1979%29.svg/1200px-E_Train_%281967-1979%29.svg.png');
+            background-size: cover;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-author {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .comment-text {
+            margin-bottom: 8px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .comment-like {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sidebar {
+            flex: 1;
+        }
+
+        .recommended-video {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .recommended-thumbnail {
+            width: 168px;
+            height: 94px;
+            background: #ddd;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .recommended-info h4 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .recommended-channel {
+            font-size: 0.8rem;
+            color: #606060;
+            margin-bottom: 4px;
+        }
+
+        .recommended-meta {
+            font-size: 0.8rem;
+            color: #606060;
+        }
+
+
+
+        /* Обновленные стили для кнопок лайков/дизлайков */
+        .like-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 18px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #0f0f0f;
+        }
+
+        .like-button:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .like-button.active {
+            color: #065fd4;
+        }
+
+        .dislike-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 18px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #0f0f0f;
+        }
+
+        .dislike-button:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .dislike-button.active {
+            color: #065fd4;
+        }
+
+        /* Обновленные стили для счетчиков */
+        .like-count {
+            color: inherit;
+            font-size: 0.9rem;
+        }
+
+        /* Для комментариев */
+        .comment-like-button {
+            color: #606060;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+        }
+
+        .comment-like-button:hover {
+            color: #065fd4;
+        }
+
+        .comment-like-count {
+            font-size: 0.8rem;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="video-view">
+        <div class="video-container">
+            <video controls th:src="${video.getVideoPath()}" class="video-player"></video>
+
+            <div class="video-info">
+                <h1 class="video-title" th:text="${video.getTitle()}">Название видео</h1>
+
+                <div class="video-meta">
+                    <span class="video-views" th:text="5 + ' просмотров'">0 просмотров</span>
+                    <span class="video-date" th:text="7.04.2025"></span>
+                </div>
+
+                <div class="video-actions">
+                    <button class="action-button">
+                        <span>👍</span>
+                        <span th:text="2">0</span>
+                    </button>
+                    <button class="action-button">
+                        <span>👎</span>
+                        <span th:text="0">0</span>
+                    </button>
+                </div>
+
+                <div class="channel-info">
+                    <div class="channel-avatar"></div>
+                    <div>
+                        <div class="channel-name" th:text="user1">Автор видео</div>
+                        <div class="channel-subs">0 подписчиков</div>
+                    </div>
+                    <button class="subscribe-button">Подписаться</button>
+                </div>
+
+                <div class="video-description" th:text="${video.description}">
+                    Описание видео
+                </div>
+            </div>
+
+            <div class="comments-section">
+                <h2 class="comments-title">Комментарии <span th:text="'(' + ${comments.size()} + ')'">(0)</span></h2>
+
+                <form class="comment-form" th:action="@{/video/{videoId}/comment(videoId=${video.getVideoId()})}" method="post">
+                    <textarea class="comment-input" name="commentText" placeholder="Добавьте комментарий..." required></textarea>
+                    <button class="comment-submit" type="submit">Отправить</button>
+                </form>
+
+                <div class="comment-list">
+                    <div class="comment-item" th:each="comment : ${comments}">
+                        <div class="comment-avatar"></div>
+                        <div class="comment-content">
+                            <div class="comment-author" th:text="${comment.user.username}">Пользователь</div>
+                            <div class="comment-text" th:text="${comment.text}">Текст комментария</div>
+                            <div class="comment-actions">
+                                <form class="comment-like" th:action="@{/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
+                                    <input type="hidden" name="like" value="true">
+                                    <button type="submit">👍</button>
+                                    <span th:text="1">0</span>
+                                </form>
+                                <form class="comment-like" th:action="@{/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
+                                    <input type="hidden" name="like" value="false">
+                                    <button type="submit">👎</button>
+                                </form>
+                                <span>Ответить</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="recommended-video">
+                <div class="recommended-thumbnail"></div>
+                <div class="recommended-info">
+                    <h4>Как создать видеохостинг за 10 минут</h4>
+                    <div class="recommended-channel">RadikTube</div>
+                    <div class="recommended-meta">124K просмотров · 2 дня назад</div>
+                </div>
+            </div>
+
+            <div class="recommended-video">
+                <div class="recommended-thumbnail"></div>
+                <div class="recommended-info">
+                    <h4>Spring Boot для начинающих</h4>
+                    <div class="recommended-channel">Java Guru</div>
+                    <div class="recommended-meta">87K просмотров · 1 неделя назад</div>
+                </div>
+            </div>
+
+            <div class="recommended-video">
+                <div class="recommended-thumbnail"></div>
+                <div class="recommended-info">
+                    <h4>Thymeleaf - полный курс</h4>
+                    <div class="recommended-channel">Web Dev</div>
+                    <div class="recommended-meta">156K просмотров · 3 недели назад</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

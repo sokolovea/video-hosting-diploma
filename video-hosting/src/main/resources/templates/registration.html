@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Страница регистрации на видеохостинге">
+    <title>Регистрация</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<!--<div th:replace="fragments/header.html"></div>-->
+
+<main>
+    <section class="registration-section">
+        <div class="container">
+            <h2>Регистрация на RadikTube</h2>
+            <p>Уже есть аккаунт? <a th:href="@{/login}">Войти</a></p>
+            <form th:action="@{/register}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="login">Логин</label>
+                    <input type="text" id="login" name="login" required placeholder="Введите ваш логин">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" name="password" required placeholder="Введите ваш пароль">
+                </div>
+
+                <div class="form-group">
+                    <label for="surname">Фамилия</label>
+                    <input type="text" id="surname" name="surname" required placeholder="Введите вашу фамилию">
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Имя</label>
+                    <input type="text" id="name" name="name" required placeholder="Введите ваше имя">
+                </div>
+
+                <div class="form-group">
+                    <label for="patronymic">Отчество</label>
+                    <input type="text" id="patronymic" name="patronymic" placeholder="Введите ваше отчество">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Электронная почта</label>
+                    <input type="email" id="email" name="email" required placeholder="Введите ваш email">
+                </div>
+
+                <div class="form-group">
+                    <label for="telephone">Телефон</label>
+                    <input type="tel" id="telephone" name="telephone" required placeholder="Введите ваш телефон">
+                </div>
+
+                <div class="form-group">
+                    <label for="imagePath">Изображение профиля</label>
+                    <input type="file" id="imagePath" name="imagePath" accept="image/*" required>
+                </div>
+
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+        </div>
+    </section>
+</main>
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

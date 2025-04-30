@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Страница загрузки видео">
+    <title>Загрузка видео</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .upload-section {
+            margin: 50px auto;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #007bff;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .form-group {
+            text-align: left;
+        }
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: #f7f7f7;
+        }
+        .form-group textarea {
+            resize: vertical;
+        }
+        .form-group select {
+            height: auto;
+        }
+        .submit-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="upload-section">
+        <div class="container">
+            <h2>Загрузка видео</h2>
+            <form class="upload-form" th:action="@{/upload_video}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Название видео</label>
+                    <input type="text" id="title" name="title" required placeholder="Введите название видео">
+                </div>
+                <div class="form-group">
+                    <label for="description">Описание</label>
+                    <textarea id="description" name="description" rows="4" required placeholder="Введите описание видео"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="videoFile">Файл видео</label>
+                    <input type="file" id="videoFile" name="videoFile" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Фото обложки</label>
+                    <input type="file" id="imageFile" name="imageFile" required>
+                </div>
+                <div class="form-group">
+                    <label for="categories">Категории</label>
+                    <select id="categories" name="categories" multiple size="5" required>
+                        <option th:each="class : ${classes}" th:value="${class}" th:text="${class}"></option>
+                    </select>
+                </div>
+                <button class="submit-button" type="submit">Загрузить</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

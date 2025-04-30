@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Профиль пользователя">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="profile-section">
+        <div class="container">
+            <h2>Профиль пользователя</h2>
+            <div class="profile-info">
+                <div class="profile-image">
+                    <img th:src="@{${user.imagePath}}" alt="Фото профиля">
+                </div>
+                <div class="profile-details">
+                    <p><strong>Логин:</strong> <span th:text="${user.login}"></span></p>
+                    <p><strong>Имя:</strong> <span th:text="${user.name}"></span></p>
+                    <p><strong>Фамилия:</strong> <span th:text="${user.surname}"></span></p>
+                    <p><strong>Отчество:</strong> <span th:text="${user.patronymic}"></span></p>
+                    <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+                    <p><strong>Телефон:</strong> <span th:text="${user.telephone}"></span></p>
+                    <p><strong>Дата регистрации:</strong> <span th:text="${user.createdAt}"></span></p>
+                </div>
+            </div>
+            <a href="/edit-profile" class="edit-profile-btn">Редактировать профиль</a>
+            <h2>Генерация отчёта</h2>
+            <form th:action="@{/generate_report_user}" method="post">
+                <button type="submit">Сгенерировать отчёт</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

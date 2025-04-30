@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Страница управления плейлистами">
+  <title>Мои плейлисты</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <style>
+    .playlists-section {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .playlist-list {
+      margin: 0 auto;
+      max-width: 600px;
+    }
+    .playlist-card {
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .playlist-card h4 {
+      margin: 0 0 10px 0;
+    }
+    .playlist-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .edit-button,
+    .delete-button {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .edit-button {
+      background-color: #007bff;
+      color: white;
+    }
+    .delete-button {
+      background-color: #ff6666;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<main>
+  <section class="playlists-section">
+    <div class="container">
+      <h2>Мои плейлисты</h2>
+      <div class="playlist-list">
+        <div class="playlist-card">
+          <h4>Плейлист 1</h4>
+          <div class="playlist-buttons">
+            <button class="edit-button">Редактировать</button>
+            <button class="delete-button">Удалить</button>
+          </div>
+        </div>
+        <div class="playlist-card">
+          <h4>Плейлист 2</h4>
+          <div class="playlist-buttons">
+            <button class="edit-button">Редактировать</button>
+            <button class="delete-button">Удалить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

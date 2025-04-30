@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Форма отчёта администратора">
+    <title>Отчёт администратора</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .report-output {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .report-output table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        .report-output th, .report-output td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .report-output th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="admin-report-section">
+        <div class="container">
+            <h2>Отчёт администратора</h2>
+            <form th:action="@{/admin/report}" method="post">
+                <div class="form-group">
+                    <label for="startDate">Начальная дата</label>
+                    <input type="date" id="startDate" name="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">Конечная дата</label>
+                    <input type="date" id="endDate" name="endDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="filterUser">Пользователь</label>
+                    <input type="text" id="filterUser" name="filterUser" placeholder="Введите имя пользователя">
+                </div>
+                <button type="submit">Сгенерировать отчёт</button>
+            </form>
+        </div>
+
+        <!-- Отображение отчёта -->
+        <div class="report-output">
+            <h3>Результаты отчёта</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>Параметр</th>
+                    <th>Значение</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Пример данных -->
+                <tr>
+                    <td>Количество видео</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>Количество комментариев</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>Количество лайков</td>
+                    <td>15</td>
+                </tr>
+                <tr>
+                    <td>Количество дизлайков</td>
+                    <td>2</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

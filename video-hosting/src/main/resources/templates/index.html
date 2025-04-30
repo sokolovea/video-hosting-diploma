@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RadikTube - смотрите лучшие видео на платформе">
+    <title>RadikTube</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="video-section">
+        <div class="container">
+            <h2>Популярные видео</h2>
+            <div class="video-grid">
+                <div th:each="video : ${videos}" class="video-card">
+                    <a th:href="@{/video/{id}(id=${video.videoId})}">
+                        <img th:src="${video.getImagePath()}" th:alt="${video.getTitle()}">
+                        <h3 th:text="${video.getTitle()}">Заголовок видео</h3>
+                    </a>
+                    <p th:text="${video.getDescription()}">Описание видео</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

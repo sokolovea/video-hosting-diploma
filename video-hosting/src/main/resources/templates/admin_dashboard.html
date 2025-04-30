@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<header>
+    <h1>Панель администратора</h1>
+</header>
+
+<main>
+    <section>
+        <h2>Управление пользователями</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Логин</th>
+                <th>Email</th>
+                <th>Роль</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.userId}"></td>
+                <td th:text="${user.login}"></td>
+                <td th:text="${user.email}"></td>
+                <td th:text="${user.roles}"></td>
+                <td>
+                    <form th:action="@{/admin/toggle-block}" method="post">
+                        <input type="hidden" name="userId" th:value="${user.userId}">
+                        <button type="submit"
+                                th:text="${user.isBlocked} ? 'Разблокировать' : 'Заблокировать'"
+                                th:class="${user.isBlocked} ? 'unblock-btn' : 'block-btn'">
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Анализ контента</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">Всего видео:</span>
+                <span class="stat-value" th:text="${statistics.totalVideos}"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Всего комментариев:</span>
+                <span class="stat-value" th:text="${statistics.totalComments}"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Среднее комментариев/видео:</span>
+                <span class="stat-value" th:text="${#numbers.formatDecimal(statistics.avgComments, 1, 2)}"></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Заблокировано пользователей:</span>
+                <span class="stat-value" th:text="${statistics.blockedUsers}"></span>
+            </div>
+        </div>
+    </section>
+    <section>
+        <h2>Генерация отчёта</h2>
+        <form th:action="@{/generate_report}" method="post">
+            <label for="reportCount">Количество топовых видео для добавления в отчёт:</label>
+            <input type="number" id="reportCount" name="reportCount" min="0" required>
+            <button type="submit">Сгенерировать отчёт</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
