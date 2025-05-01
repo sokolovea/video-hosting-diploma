@@ -1,0 +1,30 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: "video-hosting"
+  jpa:
+    properties:
+      hibernate:
+        dialect: "org.hibernate.dialect.PostgreSQLDialect"
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/videohosting"
+    username: "postgres"
+    password: 1
+    driver-class-name: org.postgresql.Driver
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
+  servlet:
+    multipart:
+      max-file-size: 10000MB
+      max-request-size: 10000MB
+      resolve-lazily: true
+      file-size-threshold: 10000MB
+      location: ${java.io.tmpdir}
+
+uploads:
+  dir:
+    uploads/

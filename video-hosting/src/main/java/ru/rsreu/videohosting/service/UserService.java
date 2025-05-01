@@ -56,6 +56,16 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public boolean isUserExist(String login) {
+        return userRepository.findByLogin(login).isPresent();
+    }
+
+    @Transactional
+    public boolean isUserWithCurrentEmailExist(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
 //    public User getCurrentUser() {
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        Long userId = 0L;

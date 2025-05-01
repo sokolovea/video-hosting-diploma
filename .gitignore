@@ -174,5 +174,7 @@ build/
 ### Additional ###
 video-hosting/uploads
 video-hosting/uploads/**
-
+pz/
+pr/**
+*.mp4
 

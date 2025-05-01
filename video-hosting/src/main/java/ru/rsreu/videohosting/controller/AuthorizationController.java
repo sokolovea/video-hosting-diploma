@@ -41,6 +41,16 @@ public class AuthorizationController {
         }
 
         try {
+            if (userService.isUserExist(registrationDto.getLogin())) {
+                result.rejectValue("login", "login.exists");
+            }
+            if (userService.isUserWithCurrentEmailExist(registrationDto.getEmail())) {
+                result.rejectValue("email", "email.exists");
+            }
+
+            if (result.hasErrors()) {
+                return "registration";
+            }
             userService.registerNewUser(registrationDto);
             redirectAttributes.addFlashAttribute("success", "Регистрация прошла успешно!");
             return "redirect:/login";
