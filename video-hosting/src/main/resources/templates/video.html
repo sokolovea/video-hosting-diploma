@@ -361,20 +361,21 @@
                 </form>
 
                 <div class="comment-list">
-                    <div class="comment-item" th:each="comment : ${comments}">
+                    <div class="comment-item" th:each="comment : ${comments.keySet()}">
                         <div class="comment-avatar"></div>
                         <div class="comment-content">
                             <div class="comment-author" th:text="${comment.user.username}">Пользователь</div>
                             <div class="comment-text" th:text="${comment.text}">Текст комментария</div>
                             <div class="comment-actions">
-                                <form class="comment-like" th:action="@{/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
-                                    <input type="hidden" name="like" value="true">
+                                <form class="comment-like" th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
+                                    <input type="hidden" name="markId" th:value="${likeId}"> <!-- DEBUG -->
                                     <button type="submit">👍</button>
-                                    <span th:text="1">0</span>
+                                    <span th:text="${comments.get(comment).get(0)}">LIKES</span> <!-- DEBUG -->
                                 </form>
-                                <form class="comment-like" th:action="@{/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
-                                    <input type="hidden" name="like" value="false">
+                                <form class="comment-like" th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
+                                    <input type="hidden" name="markId" th:value="${dislikeId}"> <!-- DEBUG -->
                                     <button type="submit">👎</button>
+                                    <span th:text="${comments.get(comment).get(1)}">DISLIKES</span> <!-- DEBUG -->
                                 </form>
                                 <span>Ответить</span>
                             </div>

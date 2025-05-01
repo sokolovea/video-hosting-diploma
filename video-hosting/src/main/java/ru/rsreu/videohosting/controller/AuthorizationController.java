@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.rsreu.videohosting.dto.LoginDTO;
 import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.service.UserService;
 
@@ -64,7 +65,8 @@ public class AuthorizationController {
     }
 
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(Model model) {
+        model.addAttribute("user", new LoginDTO());
         return "login";
     }
 

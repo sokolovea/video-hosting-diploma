@@ -1,5 +1,6 @@
 package ru.rsreu.videohosting.controller;
 
+import org.apache.catalina.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,8 @@ import ru.rsreu.videohosting.service.StorageService;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +34,8 @@ public class MVCVideoHostingController {
     private final ClassRepository classRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
+    private final MarkRepository markRepository;
+    private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
 
@@ -39,15 +44,17 @@ public class MVCVideoHostingController {
                                      @Autowired ClassRepository classRepository,
                                      @Autowired VideoRepository videoRepository,
                                      @Autowired CommentRepository commentRepository,
+                                     @Autowired MarkRepository markRepository,
                                      @Autowired UserCommentMarkRepository commentMarkRepository,
                                      @Autowired StorageService storageService) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
+        this.markRepository = markRepository;
         this.storageService = storageService;
+        this.userCommentMarkRepository = commentMarkRepository;
     }
-
 
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
@@ -70,11 +77,6 @@ public class MVCVideoHostingController {
     }
 
 
-    @GetMapping("/subscriptions")
-    public String sub(Model model) {
-        return "subscriptions";
-    }
-
     @GetMapping("/upload_video")
     public String uploadVideo(Model model) {
         List<String> classes = classRepository.getAllClassNames();
@@ -87,7 +89,7 @@ public class MVCVideoHostingController {
                               @RequestParam("description") String description,
                               @RequestParam("videoFile") MultipartFile videoFile,
                               @RequestParam("imageFile") MultipartFile imageFile,
-                              @RequestParam("categories") List<String> classesString) throws IOException {
+                              @RequestParam("categories") List<String> classesString) {
 
         if (videoFile.isEmpty()) {
             return "redirect:/upload_video?error";
@@ -104,8 +106,8 @@ public class MVCVideoHostingController {
         Video video = new Video();
         video.setTitle(title);
         video.setDescription(description);
-        video.setVideoPath(videoPath.toString());
-        video.setImagePath(imagePath.toString());
+        video.setVideoPath(videoPath);
+        video.setImagePath(imagePath);
 
         List<Class> classes = classRepository.findAllByClassNameIn(classesString);
         video.setClasses(classes);
@@ -122,49 +124,53 @@ public class MVCVideoHostingController {
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
-
-            List<Comment> comments = commentRepository.findByVideo(video);
-
+            HashMap<Comment, List<Long>> comments = new HashMap<>();
+            for (Comment comment : commentRepository.findByVideo(video)) {
+                comments.put(comment, new ArrayList<>(List.of(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()),
+                                                        userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()))));
+            }
             model.addAttribute("video", video);
             model.addAttribute("comments", comments);
+            model.addAttribute("likeId", markRepository.findByName("LIKE").get().getMarkId());
+            model.addAttribute("dislikeId", markRepository.findByName("DISLIKE").get().getMarkId());
         } else {
             return "redirect:/404";
         }
         return "video";
     }
 
-    @PostMapping("/video/{videoId}/comment")
-    public String addComment(@PathVariable Long videoId,
-                             @RequestParam("commentText") String commentText,
-                             Principal principal) {
-        Optional<Video> videoOptional = videoRepository.findById(videoId);
-        if (videoOptional.isPresent() && principal != null) {
-            Video video = videoOptional.get();
-            Optional<User> userOptional = userRepository.findByLogin(principal.getName());
-            User user = userOptional.get();
-
-            Comment comment = new Comment();
-            comment.setText(commentText);
-            comment.setVideo(video);
-            comment.setUser(user);
-            comment.setIsModified(false);
-
-            commentRepository.save(comment);
-        }
-
-        return "redirect:/video/" + videoId;
-    }
-
+//    @PostMapping("/video/{videoId}/comment")
+//    public String addComment(@PathVariable Long videoId,
+//                             @RequestParam("commentText") String commentText,
+//                             Principal principal) {
+//        Optional<Video> videoOptional = videoRepository.findById(videoId);
+//        if (videoOptional.isPresent() && principal != null) {
+//            Video video = videoOptional.get();
+//            Optional<User> userOptional = userRepository.findByLogin(principal.getName());
+//            User user = userOptional.get();
+//
+//            Comment comment = new Comment();
+//            comment.setText(commentText);
+//            comment.setVideo(video);
+//            comment.setUser(user);
+//            comment.setIsModified(false);
+//
+//            commentRepository.save(comment);
+//        }
+//
+//        return "redirect:/video/" + videoId;
+//    }
+//
     @GetMapping("/search")
     public String search() {
         return "video_search";
     }
-
-
+//
+//
 //    @PostMapping("/video/{videoId}/comment/{commentId}/like")
 //    public String likeComment(@PathVariable Long videoId,
 //                              @PathVariable Long commentId,
-//                              @RequestParam("like") boolean isLike,
+//                              @RequestParam("markId") Long markId,
 //                              Principal principal) {
 //        if (principal != null) {
 //            Optional<User> userOptional = userRepository.findByLogin(principal.getName());
@@ -176,12 +182,11 @@ public class MVCVideoHostingController {
 //                UserCommentMark userCommentMark = new UserCommentMark();
 //                userCommentMark.setComment(comment);
 //                userCommentMark.setUser(user);
-//                if (isLike) {
-//                    userCommentMark.setMark(MarkType.LIKE);
-//                } else {
-//                    userCommentMark.setMark(MarkType.DISLIKE);
+//                Optional<MarkType> mark = markRepository.findById(markId);
+//                if (mark.isPresent()) {
+//                    userCommentMark.setMark(mark.get());
+//                    userCommentMarkRepository.save(userCommentMark);
 //                }
-//                userCommentMarkRepository.save(userCommentMark);
 //            }
 //        }
 //        return "redirect:/video/" + videoId;
