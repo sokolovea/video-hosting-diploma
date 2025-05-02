@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,10 +21,11 @@ import ru.rsreu.videohosting.service.StorageService;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.text.SimpleDateFormat;
+import java.time.DateTimeException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.*;
 
 
 @SpringBootApplication
@@ -38,6 +40,8 @@ public class MVCVideoHostingController {
     private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final VideoViewsRepository videoViewsRepository;
+    private final UserVideoMarkRepository videoMarkRepository;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -46,7 +50,9 @@ public class MVCVideoHostingController {
                                      @Autowired CommentRepository commentRepository,
                                      @Autowired MarkRepository markRepository,
                                      @Autowired UserCommentMarkRepository commentMarkRepository,
-                                     @Autowired StorageService storageService) {
+                                     @Autowired StorageService storageService,
+                                     @Autowired VideoViewsRepository videoViewsRepository,
+                                     @Autowired UserVideoMarkRepository videoMarkRepository) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -54,6 +60,8 @@ public class MVCVideoHostingController {
         this.markRepository = markRepository;
         this.storageService = storageService;
         this.userCommentMarkRepository = commentMarkRepository;
+        this.videoViewsRepository = videoViewsRepository;
+        this.videoMarkRepository = videoMarkRepository;
     }
 
     @GetMapping("/profile")
@@ -89,7 +97,12 @@ public class MVCVideoHostingController {
                               @RequestParam("description") String description,
                               @RequestParam("videoFile") MultipartFile videoFile,
                               @RequestParam("imageFile") MultipartFile imageFile,
-                              @RequestParam("categories") List<String> classesString) {
+                              @RequestParam("categories") List<String> classesString,
+                              Principal principal) {
+
+        if (principal == null) {
+            return "redirect:/404";
+        }
 
         if (videoFile.isEmpty()) {
             return "redirect:/upload_video?error";
@@ -111,11 +124,13 @@ public class MVCVideoHostingController {
 
         List<Class> classes = classRepository.findAllByClassNameIn(classesString);
         video.setClasses(classes);
-        video.setAuthor(userRepository.findById(1L).get());
-
-        videoRepository.save(video);
-
-        return "redirect:/upload_video?success";
+        Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
+        if (optionalUser.isPresent()) {
+            video.setAuthor(optionalUser.get());
+            videoRepository.save(video);
+            return "redirect:/upload_video?success";
+        }
+        return "redirect:/upload_video?error"; //DEBUG
     }
 
     @GetMapping("/video/{videoId}")
@@ -124,15 +139,21 @@ public class MVCVideoHostingController {
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
-            HashMap<Comment, List<Long>> comments = new HashMap<>();
+            HashMap<Comment, HashMap<String, Long>> comments = new HashMap<>();
             for (Comment comment : commentRepository.findByVideo(video)) {
-                comments.put(comment, new ArrayList<>(List.of(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()),
-                                                        userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()))));
+                comments.put(comment, new HashMap<>(Map.of("LIKE", userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()),
+                        "DISLIKE", userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()))));
             }
+
+            MarkType likeMark = markRepository.findByName("LIKE").get();
+            MarkType dislikeMark = markRepository.findByName("DISLIKE").get();
             model.addAttribute("video", video);
             model.addAttribute("comments", comments);
-            model.addAttribute("likeId", markRepository.findByName("LIKE").get().getMarkId());
-            model.addAttribute("dislikeId", markRepository.findByName("DISLIKE").get().getMarkId());
+            model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
+            model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMark(video, likeMark));
+            model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
+            model.addAttribute("likeId", likeMark.getMarkId());
+            model.addAttribute("dislikeId", dislikeMark.getMarkId());
         } else {
             return "redirect:/404";
         }

@@ -25,6 +25,7 @@ CREATE TABLE video (
     description TEXT,
     author_id BIGINT REFERENCES "user"(user_id),
     video_path VARCHAR(255) NOT NULL,
+	image_path VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX idx_video_author_id ON video(author_id);
@@ -103,16 +104,20 @@ CREATE TABLE video_class (
 );
 CREATE INDEX idx_video_class_video_id ON video_class(video_id);
 
--- Создание таблицы "history"
-CREATE TABLE history (
-    video_id BIGINT,
-    user_id BIGINT,
-	viewed_at TIMESTAMPTZ DEFAULT now(),
-    PRIMARY KEY (video_id, user_id),
-    FOREIGN KEY (video_id) REFERENCES "video"(video_id),
-    FOREIGN KEY (user_id) REFERENCES "user"(user_id)
+-- Создание таблицы "video_views"
+CREATE TABLE video_views (
+    view_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    video_id BIGINT REFERENCES video(video_id) NOT NULL,
+    user_id BIGINT REFERENCES "user"(user_id) NOT NULL,
+    viewed_at TIMESTAMPTZ DEFAULT now(),
+    ip_address INET NOT NULL
 );
-CREATE INDEX idx_history_user_id ON history(user_id);
+
+-- Индексы для ускорения выборок
+CREATE INDEX idx_video_views_video ON video_views(video_id);
+CREATE INDEX idx_video_views_user ON video_views(user_id);
+CREATE INDEX idx_video_views_combined ON video_views(video_id, user_id);
+CREATE INDEX idx_video_views_viewed_at ON video_views(viewed_at);
 
 -- Создание таблицы "subscriptions"
 CREATE TABLE subscriptions (
@@ -125,6 +130,10 @@ CREATE TABLE subscriptions (
 );
 CREATE INDEX idx_subscriptions_subscriber_id ON Subscriptions(subscriber_id);
 
+
+INSERT INTO mark_type (name) VALUES 
+('LIKE'),
+('DISLIKE');
 
 INSERT INTO role (role_name) VALUES 
 ('USER'),
@@ -140,4 +149,6 @@ INSERT INTO "class"	(class_name) VALUES
 ('строительство'),
 ('хобби');
 
+INSERT INTO "user" (login, password, surname, name, patronymic, email, telephone, image_path) VALUES
+('test','2a$10$Q6f8rbUq3iDX1FevUmE5Mef5K6z7.rTJTXkQUzysZG7nqGgH1p5Oa','Тестов','Тест','Тестович','test@yandex.ru','+7-(000)-000-00-00','.\uploads\photo\4ce3851a-a569-4fec-8835-652f2c8d09ed_Снимок экрана_20250424_115816.png');
 select * from "user";

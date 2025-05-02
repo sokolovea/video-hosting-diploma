@@ -15,20 +15,25 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(HistoryId.class)
-public class History implements Serializable {
+public class VideoViews implements Serializable {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "view_id")
+    private Long viewId;
+
     @ManyToOne
-    @JoinColumn(name = "video_id")
+    @JoinColumn(name = "video_id", nullable = false)
     private Video video;
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(updatable = false)
+    @Column(name = "viewed_at", nullable = false)
     private LocalDateTime viewedAt = LocalDateTime.now();
+
+    @Column(name = "ip_address", nullable = false)
+    private String ipAddress;
 }
 

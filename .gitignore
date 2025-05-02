@@ -172,6 +172,7 @@ build/
 .vscode/
 
 ### Additional ###
+video-hosting/src/main/resources/keys.yml
 video-hosting/uploads
 video-hosting/uploads/**
 pz/
