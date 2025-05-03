@@ -8,6 +8,8 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -34,6 +36,15 @@ public class Comment implements Serializable {
     private Comment parent;
 
     private Boolean isModified;
+
+    @Transient
+    private Long likesCount;
+
+    @Transient
+    private Long dislikesCount;
+
+    @Transient
+    private List<Comment> replies = new ArrayList<>();
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

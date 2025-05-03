@@ -6,7 +6,111 @@
     <meta name="description" content="Просмотр видео">
     <title th:text="${video.title} + ' | RadikTube'">Просмотр видео | RadikTube</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script>
+        function toggleReplyForm(button) {
+            const replyForm = button.closest('.comment-item').querySelector('.reply-form');
+            if (replyForm.style.display === 'none' || replyForm.style.display === '') {
+                replyForm.style.display = 'block';
+                replyForm.style.animation = 'fadeIn 0.3s ease';
+            } else {
+                replyForm.style.display = 'none';
+            }
+        }
+
+
+    </script>
     <style>
+
+        .comment-item {
+            margin-bottom: 16px;
+            padding: 8px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .comment-item:hover {
+            background-color: #f1f1f1;
+        }
+
+        .replies {
+            margin-top: 16px;
+            padding-left: 16px;
+            border-left: 2px solid #ccc;
+        }
+
+        .reply-button {
+            color: #007bff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .reply-button:hover {
+            text-decoration: underline;
+        }
+
+
+        .comment-like-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: transparent;
+            border: none;
+            color: #606060;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .comment-like-button:hover {
+            color: #065fd4;
+        }
+
+        .comment-like-button.active {
+            color: #065fd4;
+        }
+
+
+        .reply-form {
+            display: none;
+            margin-top: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .reply-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .reply-form button {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .reply-form button:hover {
+            background-color: #218838;
+        }
+
+        .comment-text {
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+
+
+
+
         .video-view {
             display: flex;
             gap: 24px;
@@ -123,88 +227,92 @@
         }
 
         .comments-section {
-            margin-top: 24px;
+            margin: 20px;
         }
 
         .comments-title {
-            font-size: 1.25rem;
-            margin-bottom: 16px;
+            font-size: 1.5em;
+            margin-bottom: 20px;
         }
 
         .comment-form {
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+            flex-direction: column;
+            margin-bottom: 20px;
         }
 
-        .comment-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            resize: none;
-            min-height: 80px;
+        .comment-input,
+        .reply-input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
-        .comment-submit {
-            background: #065fd4;
+        .comment-submit,
+        .reply-submit {
+            align-self: flex-start;
+            padding: 5px 10px;
+            background-color: #28a745;
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 0 16px;
+            border-radius: 5px;
             cursor: pointer;
         }
 
         .comment-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            margin-top: 20px;
         }
 
         .comment-item {
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
         }
 
+        .comment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
 
-
-        /*.comment-avatar {*/
-        /*    width: 40px;*/
-        /*    height: 40px;*/
-        /*    border-radius: 50%;*/
-        /*    background: #ddd;*/
-        /*    flex-shrink: 0;*/
-        /*    background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/E_Train_%281967-1979%29.svg/1200px-E_Train_%281967-1979%29.svg.png');*/
-        /*    background-size: cover;*/
-        /*}*/
-
-        .comment-content {
-            flex: 1;
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
 
         .comment-author {
-            font-weight: 500;
-            margin-bottom: 4px;
+            font-weight: bold;
         }
 
-        .comment-text {
-            margin-bottom: 8px;
+        .comment-body {
+            margin-left: 50px;
         }
 
         .comment-actions {
             display: flex;
-            gap: 12px;
-            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .comment-like {
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .reply-button {
             background: none;
             border: none;
+            color: blue;
             cursor: pointer;
         }
+
+        .replies {
+            margin-left: 50px;
+            margin-top: 10px;
+            border-left: 2px solid #eee;
+            padding-left: 10px;
+        }
+
 
         .sidebar {
             flex: 1;
@@ -247,8 +355,6 @@
         }
 
 
-
-        /* Обновленные стили для кнопок лайков/дизлайков */
         .like-button {
             display: flex;
             align-items: center;
@@ -317,6 +423,23 @@
             font-size: 0.8rem;
             color: inherit;
         }
+
+        .replies {
+            margin-left: 40px;
+            border-left: 2px solid #ddd;
+            padding-left: 20px;
+        }
+
+        .reply-button {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .reply-form.hidden {
+            display: none;
+        }
+
     </style>
 </head>
 <body>
@@ -352,7 +475,7 @@
                     </div>
                     <div>
                         <div class="channel-name" th:text="${video.getAuthor().login}">Автор видео</div>
-                        <div class="channel-subs">??? DEBUG ??? подписчиков</div> <!-- DEBUG-->
+                        <div class="channel-subs" th:text="${subscribers}">Число подписчиков</div> <!-- DEBUG-->
                     </div>
                     <button class="subscribe-button">Подписаться</button>
                 </div>
@@ -363,38 +486,65 @@
             </div>
 
             <div class="comments-section">
-                <h2 class="comments-title">Комментарии <span th:text="'(' + ${comments.size()} + ')'">(0)</span></h2>
-
+                <h2 class="comments-title">Комментарии</h2>
                 <form class="comment-form" th:action="@{/video/{videoId}/comment(videoId=${video.getVideoId()})}" method="post">
                     <textarea class="comment-input" name="commentText" placeholder="Добавьте комментарий..." required></textarea>
                     <button class="comment-submit" type="submit">Отправить</button>
                 </form>
-
-                <div class="comment-list">
-                    <div class="comment-item" th:each="comment : ${comments.keySet()}">
-                        <div class="user-avatar">
-                            <img th:src="${'/' + comment.getUser().getImagePath()}" alt="Avatar">
+            </div>
+            <div class="comment-list">
+                <div class="comment-item" th:each="entry : ${commentTree}">
+                    <div class="comment-header">
+                        <img class="user-avatar" th:src="${'/' + entry.key.user.imagePath}" alt="Avatar">
+                        <span class="comment-author" th:text="${entry.key.user.username}">Пользователь</span>
+                    </div>
+                    <div class="comment-body">
+                        <p class="comment-text" th:text="${entry.key.text}">Текст комментария</p>
+                        <div class="comment-actions">
+                            <form th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${entry.key.getCommentId()}, markId=1)}" method="post">
+                                <button type="submit" class="comment-like-button">👍</button>
+                                <span class="comment-like-count" th:text="${entry.key.getLikesCount()}">0</span>
+                            </form>
+                            <form th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${entry.key.getCommentId()}, markId=2)}" method="post">
+                                <button type="submit" class="comment-like-button">👎</button>
+                                <span class="comment-like-count" th:text="${entry.key.getDislikesCount()}">0</span>
+                            </form>
+                            <button class="reply-button" onclick="toggleReplyForm(this)">Ответить</button>
                         </div>
-                        <div class="comment-content">
-                            <div class="comment-author" th:text="${comment.user.username}">Пользователь</div>
-                            <div class="comment-text" th:text="${comment.text}">Текст комментария</div>
+                    </div>
+                    <div class="reply-form" style="display: none;">
+                        <form th:action="@{/video/{videoId}/comment(videoId=${video.getVideoId()})}" method="post">
+                            <textarea class="reply-input" name="replyText" placeholder="Ваш ответ..." required></textarea>
+                            <input type="hidden" name="parentId" th:value="${entry.key.commentId}" />
+                            <button class="reply-submit" type="submit">Отправить</button>
+                        </form>
+                    </div>
+
+                    <div class="replies" th:if="${entry.value.size() > 0}">
+                        <div class="comment-item" th:each="reply : ${entry.value}">
+                            <div class="comment-header">
+                                <img class="user-avatar" th:src="${'/' + reply.user.imagePath}" alt="Avatar">
+                                <span class="comment-author" th:text="${reply.user.username}">Пользователь</span>
+                            </div>
+                            <div class="comment-body">
+                                <p class="comment-text" th:text="${reply.text}">Ответ на комментарий</p>
+                            </div>
                             <div class="comment-actions">
-                                <form class="comment-like" th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
-                                    <input type="hidden" name="markId" th:value="${likeId}"> <!-- DEBUG -->
-                                    <button type="submit">👍</button>
-                                    <span th:text="${comments.get(comment).get('LIKE')}">LIKES</span> <!-- DEBUG -->
+                                <form th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${reply.getCommentId()}, markId=1)}" method="post">
+                                    <button type="submit" class="comment-like-button">👍</button>
+                                    <span class="comment-like-count" th:text="${reply.getLikesCount()}">0</span>
                                 </form>
-                                <form class="comment-like" th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${comment.getCommentId()})}" method="post">
-                                    <input type="hidden" name="markId" th:value="${dislikeId}"> <!-- DEBUG -->
-                                    <button type="submit">👎</button>
-                                    <span th:text="${comments.get(comment).get('DISLIKE')}">DISLIKES</span> <!-- DEBUG -->
+                                <form th:action="@{/api/video/{videoId}/comment/{commentId}/like(videoId=${video.getVideoId()}, commentId=${reply.getCommentId()}, markId=2)}" method="post">
+                                    <button type="submit" class="comment-like-button">👎</button>
+                                    <span class="comment-like-count" th:text="${reply.getDislikesCount()}">0</span>
                                 </form>
-                                <span>Ответить</span>
+                                <button class="reply-button" onclick="toggleReplyForm(this)">Ответить</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
         <div class="sidebar">

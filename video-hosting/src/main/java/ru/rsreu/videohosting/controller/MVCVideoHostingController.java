@@ -14,13 +14,11 @@ import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.Class;
 import ru.rsreu.videohosting.repository.*;
-import ru.rsreu.videohosting.service.ContentMultimediaType;
-import ru.rsreu.videohosting.service.CustomWebClientService;
-import ru.rsreu.videohosting.service.StorageService;
-import ru.rsreu.videohosting.service.VideoService;
+import ru.rsreu.videohosting.service.*;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @SpringBootApplication
@@ -39,6 +37,7 @@ public class MVCVideoHostingController {
     private final UserVideoMarkRepository videoMarkRepository;
     private final VideoService videoService;
     private final CustomWebClientService customWebClientService;
+    private final CommentService commentService;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -51,7 +50,8 @@ public class MVCVideoHostingController {
                                      @Autowired VideoViewsRepository videoViewsRepository,
                                      @Autowired UserVideoMarkRepository videoMarkRepository,
                                      @Autowired VideoService videoService,
-                                     @Autowired CustomWebClientService customWebClientService) {
+                                     @Autowired CustomWebClientService customWebClientService,
+                                     @Autowired CommentService commentService) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -63,6 +63,7 @@ public class MVCVideoHostingController {
         this.videoMarkRepository = videoMarkRepository;
         this.videoService = videoService;
         this.customWebClientService = customWebClientService;
+        this.commentService = commentService;
     }
 
     @GetMapping("/profile")
@@ -134,23 +135,49 @@ public class MVCVideoHostingController {
         return "redirect:/upload_video?error"; //DEBUG
     }
 
+
+    public Map<Comment, List<Comment>> buildCommentTree(List<Comment> allComments) {
+        Map<Comment, List<Comment>> tree = new HashMap<>();
+        Map<Long, Comment> commentMap = allComments.stream()
+                .collect(Collectors.toMap(Comment::getCommentId, c -> c, (c1, c2) -> c1)); // На случай дубликатов
+
+        for (Comment comment : allComments) {
+            comment.setLikesCount(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()));
+            comment.setDislikesCount(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()));
+
+            if (comment.getParent() == null) {
+                tree.putIfAbsent(comment, new ArrayList<>());
+            } else {
+                Comment parent = commentMap.get(comment.getParent().getCommentId());
+                if (parent != null) {
+                    tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(comment);
+                }
+            }
+        }
+
+        return tree;
+    }
+
+
+
     @GetMapping("/video/{videoId}")
     public String video(@PathVariable("videoId") Long videoId, Model model) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
-            HashMap<Comment, HashMap<String, Long>> comments = new HashMap<>();
-            for (Comment comment : commentRepository.findByVideo(video)) {
-                comments.put(comment, new HashMap<>(Map.of("LIKE", userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()),
-                        "DISLIKE", userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()))));
-            }
+            // Получение всех комментариев для данного видео
+            List<Comment> allComments = commentRepository.findByVideo(video);
+
+            // Построение дерева комментариев
+            Map<Comment, List<Comment>> commentTree = buildCommentTree(allComments);
 
             MarkType likeMark = markRepository.findByName("LIKE").get();
             MarkType dislikeMark = markRepository.findByName("DISLIKE").get();
 
             model.addAttribute("video", video);
-            model.addAttribute("comments", comments);
+            model.addAttribute("commentTree", commentTree);
+            model.addAttribute("subscribers", 777);
             model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
             model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMark(video, likeMark));
             model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
