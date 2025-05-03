@@ -6,16 +6,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.StorageService;
+import ru.rsreu.videohosting.service.VideoService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/api/video", produces = "application/json")
-@CrossOrigin(origins = {"http://localhost:8082"}) // DEBUG
+//@CrossOrigin(origins = {"http://localhost:8082"}) // DEBUG
+@CrossOrigin(origins = "*")
 public class VideoHostingRestController {
     private static final Logger log = LoggerFactory.getLogger(VideoHostingRestController.class);
 
@@ -26,6 +31,7 @@ public class VideoHostingRestController {
     private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final VideoService videoService;
 
     public VideoHostingRestController(@Autowired UserRepository userRepository,
                                       @Autowired ClassRepository classRepository,
@@ -33,7 +39,8 @@ public class VideoHostingRestController {
                                       @Autowired CommentRepository commentRepository,
                                       @Autowired MarkRepository markRepository,
                                       @Autowired UserCommentMarkRepository commentMarkRepository,
-                                      @Autowired StorageService storageService) {
+                                      @Autowired StorageService storageService,
+                                      @Autowired VideoService videoService) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -41,6 +48,7 @@ public class VideoHostingRestController {
         this.markRepository = markRepository;
         this.storageService = storageService;
         this.userCommentMarkRepository = commentMarkRepository;
+        this.videoService = videoService;
     }
 
     @PostMapping("/{videoId}/comment")
@@ -102,5 +110,27 @@ public class VideoHostingRestController {
 
         userCommentMarkRepository.save(userCommentMark);
         return ResponseEntity.ok("{}"); //DEBUG
+    }
+
+    @PostMapping("/view")
+    public ResponseEntity<?> trackView(
+            @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedFor,
+            HttpServletRequest request,
+            @RequestBody ViewRequestDTO viewRequestDTO,
+            Principal principal
+    ) {
+        String ipAddress = Optional.ofNullable(forwardedFor)
+                .map(f -> f.split(",")[0])
+                .orElse(request.getRemoteAddr());
+
+        if (videoService.canRecordView(viewRequestDTO.getVideoId(), ipAddress)) {
+            try {
+                videoService.recordView(viewRequestDTO.getVideoId(), principal == null ? null : userRepository.findByLogin(principal.getName()).get().getUserId(), ipAddress);
+            } catch (NoSuchElementException e) {
+                return ResponseEntity.status(400).body("Video or user not found");
+            }
+            return ResponseEntity.ok("View recorded");
+        }
+        return ResponseEntity.ok("View already recorded recently");
     }
 }

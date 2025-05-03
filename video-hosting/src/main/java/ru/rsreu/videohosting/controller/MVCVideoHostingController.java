@@ -1,30 +1,25 @@
 package ru.rsreu.videohosting.controller;
 
-import org.apache.catalina.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
+import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.Class;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.ContentMultimediaType;
+import ru.rsreu.videohosting.service.CustomWebClientService;
 import ru.rsreu.videohosting.service.StorageService;
+import ru.rsreu.videohosting.service.VideoService;
 
-import javax.sql.DataSource;
-import java.io.IOException;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.time.DateTimeException;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 
@@ -42,6 +37,8 @@ public class MVCVideoHostingController {
     private final StorageService storageService;
     private final VideoViewsRepository videoViewsRepository;
     private final UserVideoMarkRepository videoMarkRepository;
+    private final VideoService videoService;
+    private final CustomWebClientService customWebClientService;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -52,7 +49,9 @@ public class MVCVideoHostingController {
                                      @Autowired UserCommentMarkRepository commentMarkRepository,
                                      @Autowired StorageService storageService,
                                      @Autowired VideoViewsRepository videoViewsRepository,
-                                     @Autowired UserVideoMarkRepository videoMarkRepository) {
+                                     @Autowired UserVideoMarkRepository videoMarkRepository,
+                                     @Autowired VideoService videoService,
+                                     @Autowired CustomWebClientService customWebClientService) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -62,6 +61,8 @@ public class MVCVideoHostingController {
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.videoMarkRepository = videoMarkRepository;
+        this.videoService = videoService;
+        this.customWebClientService = customWebClientService;
     }
 
     @GetMapping("/profile")
@@ -147,6 +148,7 @@ public class MVCVideoHostingController {
 
             MarkType likeMark = markRepository.findByName("LIKE").get();
             MarkType dislikeMark = markRepository.findByName("DISLIKE").get();
+
             model.addAttribute("video", video);
             model.addAttribute("comments", comments);
             model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
@@ -154,6 +156,9 @@ public class MVCVideoHostingController {
             model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
             model.addAttribute("likeId", likeMark.getMarkId());
             model.addAttribute("dislikeId", dislikeMark.getMarkId());
+
+            String answer = customWebClientService.sendPostRequestUpdateVideoViews(new ViewRequestDTO(videoId));
+            log.info(answer);
         } else {
             return "redirect:/404";
         }
@@ -181,7 +186,7 @@ public class MVCVideoHostingController {
 //
 //        return "redirect:/video/" + videoId;
 //    }
-//
+
     @GetMapping("/search")
     public String search() {
         return "video_search";
