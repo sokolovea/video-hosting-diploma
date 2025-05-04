@@ -16,7 +16,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Comment implements Serializable {
+public class Comment implements Serializable, Comparable<Comment> {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long commentId;
@@ -49,5 +49,9 @@ public class Comment implements Serializable {
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Override
+    public int compareTo(Comment o) {
+        return o.getCommentId().compareTo(this.getCommentId());
+    }
 }
 

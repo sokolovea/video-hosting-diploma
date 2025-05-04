@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.rsreu.videohosting.dto.CommentRequestDTO;
+import ru.rsreu.videohosting.dto.MarkStatisticsDTO;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
@@ -14,6 +16,8 @@ import ru.rsreu.videohosting.service.VideoService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -32,6 +36,7 @@ public class VideoHostingRestController {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final VideoService videoService;
+    private final UserVideoMarkRepository userVideoMarkRepository;
 
     public VideoHostingRestController(@Autowired UserRepository userRepository,
                                       @Autowired ClassRepository classRepository,
@@ -40,7 +45,7 @@ public class VideoHostingRestController {
                                       @Autowired MarkRepository markRepository,
                                       @Autowired UserCommentMarkRepository commentMarkRepository,
                                       @Autowired StorageService storageService,
-                                      @Autowired VideoService videoService) {
+                                      @Autowired VideoService videoService, UserVideoMarkRepository userVideoMarkRepository) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -49,11 +54,49 @@ public class VideoHostingRestController {
         this.storageService = storageService;
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoService = videoService;
+        this.userVideoMarkRepository = userVideoMarkRepository;
     }
+
+    @PostMapping("/{videoId}/mark")
+    public ResponseEntity<?> addMark(@PathVariable Long videoId,
+                                     @RequestParam("markId") Long markId,
+                                     Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+        }
+
+        Optional<Video> videoOptional = videoRepository.findById(videoId);
+        if (videoOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
+        }
+
+        Optional<User> userOptional = userRepository.findByLogin(principal.getName());
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        Optional<MarkType> markOptional = markRepository.findById(markId);
+        if (markOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Mark not found");
+        }
+
+        UserVideoMark userVideoMark = new UserVideoMark();
+        userVideoMark.setUser(userOptional.get());
+        userVideoMark.setVideo(videoOptional.get());
+        userVideoMark.setMark(markOptional.get());
+
+
+        userVideoMarkRepository.save(userVideoMark);
+        Long likesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("LIKE").get());
+        Long dislikesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("DISLIKE").get());
+        return ResponseEntity.status(HttpStatus.CREATED).body(new MarkStatisticsDTO(likesCount, dislikesCount, markOptional.get().getMarkId()));
+    }
+
 
     @PostMapping("/{videoId}/comment")
     public ResponseEntity<?> addComment(@PathVariable Long videoId,
-                                        @RequestParam("commentText") String commentText,
+                                        @RequestParam(required = false, name = "parentId") Long parentId,
+                                        @RequestBody CommentRequestDTO commentText,
                                         Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
@@ -70,7 +113,10 @@ public class VideoHostingRestController {
         }
 
         Comment comment = new Comment();
-        comment.setText(commentText);
+        if (parentId != null && commentRepository.existsById(parentId)) {
+            comment.setParent(commentRepository.findById(parentId).get());
+        }
+        comment.setText(commentText.getCommentText());
         comment.setVideo(videoOptional.get());
         comment.setUser(userOptional.get());
         comment.setIsModified(false);
@@ -80,6 +126,7 @@ public class VideoHostingRestController {
     }
 
     @PostMapping("/{videoId}/comment/{commentId}/like")
+    @ResponseBody
     public ResponseEntity<?> likeComment(@PathVariable Long videoId,
                                          @PathVariable Long commentId,
                                          @RequestParam("markId") Long markId,
@@ -109,7 +156,15 @@ public class VideoHostingRestController {
         userCommentMark.setMark(markOptional.get());
 
         userCommentMarkRepository.save(userCommentMark);
-        return ResponseEntity.ok("{}"); //DEBUG
+
+        Map<String, Object> response = new HashMap<>();
+        Long updatedLikes = userCommentMarkRepository.countByCommentAndMark(commentOptional.get(), markRepository.findByName("LIKE").get());
+        Long updatedDislikes = userCommentMarkRepository.countByCommentAndMark(commentOptional.get(), markRepository.findByName("DISLIKE").get());
+        response.put("likes", updatedLikes);
+        response.put("dislikes", updatedDislikes);
+        response.put("userMark", markOptional.get().getMarkId());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/view")

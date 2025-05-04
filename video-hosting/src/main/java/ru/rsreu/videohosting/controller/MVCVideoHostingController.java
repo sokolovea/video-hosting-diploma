@@ -4,10 +4,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
@@ -16,6 +21,8 @@ import ru.rsreu.videohosting.entity.Class;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -136,8 +143,15 @@ public class MVCVideoHostingController {
     }
 
 
-    public Map<Comment, List<Comment>> buildCommentTree(List<Comment> allComments) {
-        Map<Comment, List<Comment>> tree = new HashMap<>();
+    public SortedMap<Comment, List<Comment>> buildCommentTree(List<Comment> allComments) {
+
+        allComments.sort(new Comparator<Comment>() {
+            @Override
+            public int compare(Comment o1, Comment o2) {
+                return o2.getCommentId().compareTo(o1.getCommentId());
+            }
+        });
+        SortedMap<Comment, List<Comment>> tree = new TreeMap<>();
         Map<Long, Comment> commentMap = allComments.stream()
                 .collect(Collectors.toMap(Comment::getCommentId, c -> c, (c1, c2) -> c1)); // На случай дубликатов
 
@@ -147,10 +161,18 @@ public class MVCVideoHostingController {
 
             if (comment.getParent() == null) {
                 tree.putIfAbsent(comment, new ArrayList<>());
-            } else {
-                Comment parent = commentMap.get(comment.getParent().getCommentId());
+            }
+        }
+
+        for (Comment comment : allComments) {
+            if (comment.getParent() != null) {
+                Comment tempParent = comment.getParent();
+                while (!tree.containsKey(tempParent) && tempParent.getParent() != null) {
+                    tempParent = tempParent.getParent();
+                }
+                Comment parent = commentMap.get(tempParent.getCommentId());
                 if (parent != null) {
-                    tree.computeIfAbsent(parent, k -> new ArrayList<>()).add(comment);
+                    tree.get(parent).add(comment);
                 }
             }
         }
@@ -161,8 +183,12 @@ public class MVCVideoHostingController {
 
 
     @GetMapping("/video/{videoId}")
-    public String video(@PathVariable("videoId") Long videoId, Model model) {
+    public String video(@PathVariable("videoId") Long videoId, Model model,
+                        HttpServletRequest request) {
+        CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
+
+        HttpSession httpSession = request.getSession();
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
@@ -183,9 +209,6 @@ public class MVCVideoHostingController {
             model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
             model.addAttribute("likeId", likeMark.getMarkId());
             model.addAttribute("dislikeId", dislikeMark.getMarkId());
-
-            String answer = customWebClientService.sendPostRequestUpdateVideoViews(new ViewRequestDTO(videoId));
-            log.info(answer);
         } else {
             return "redirect:/404";
         }
