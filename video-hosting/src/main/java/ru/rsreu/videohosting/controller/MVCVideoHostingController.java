@@ -185,10 +185,7 @@ public class MVCVideoHostingController {
     @GetMapping("/video/{videoId}")
     public String video(@PathVariable("videoId") Long videoId, Model model,
                         HttpServletRequest request) {
-        CsrfToken token = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
-
-        HttpSession httpSession = request.getSession();
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();

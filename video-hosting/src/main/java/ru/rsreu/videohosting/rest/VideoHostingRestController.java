@@ -1,5 +1,10 @@
 package ru.rsreu.videohosting.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.MapSerializer;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,19 +12,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.videohosting.dto.CommentRequestDTO;
+import ru.rsreu.videohosting.dto.CommentResponseDTO;
 import ru.rsreu.videohosting.dto.MarkStatisticsDTO;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.StorageService;
 import ru.rsreu.videohosting.service.VideoService;
+import ru.rsreu.videohosting.util.GsonUtil;
+import ru.rsreu.videohosting.util.JacksonUtil;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Null;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/api/video", produces = "application/json")
@@ -187,5 +194,99 @@ public class VideoHostingRestController {
             return ResponseEntity.ok("View recorded");
         }
         return ResponseEntity.ok("View already recorded recently");
+    }
+
+    @GetMapping("/{videoId}/comments")
+    public ResponseEntity<?> getCommentTree(@PathVariable Long videoId) {
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+
+        if (optionalVideo.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Comment> allComments = commentRepository.findByVideo(optionalVideo.get());
+
+        ObjectMapper objectMapper = JacksonUtil.getObjectMapper();
+
+        SortedMap<Comment, List<Comment>> commentTree = buildCommentTree(allComments);
+
+        SortedMap<String, List<Comment>> resultMap = commentTree.entrySet().stream()
+            .collect(Collectors.toMap(
+                    entry -> {
+                        try {
+                            return String.valueOf(objectMapper.writeValueAsString(entry.getKey()));
+                        } catch (JsonProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, // ключ - ID комментария
+                    Map.Entry::getValue,                                   // значение - список комментариев
+                    (oldValue, newValue) -> oldValue,                      // функция слияния для дубликатов
+                    TreeMap::new                                           // конкретная реализация SortedMap
+            ));
+
+
+
+
+        String json = null;
+        try {
+            json = objectMapper.writeValueAsString(resultMap);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return ResponseEntity.ok(json);
+    }
+
+    private CommentResponseDTO convertToDTO(Comment comment) {
+        return new CommentResponseDTO(
+            comment
+        );
+    }
+
+
+    public SortedMap<Comment, List<Comment>> buildCommentTree(List<Comment> allComments) {
+
+        allComments.sort(new Comparator<Comment>() {
+            @Override
+            public int compare(Comment o1, Comment o2) {
+                return o2.getCommentId().compareTo(o1.getCommentId());
+            }
+        });
+        SortedMap<Comment, List<Comment>> tree = new TreeMap<>();
+        Map<Long, Comment> commentMap = allComments.stream()
+                .collect(Collectors.toMap(Comment::getCommentId, c -> c, (c1, c2) -> c1)); // На случай дубликатов
+
+        for (Comment comment : allComments) {
+            comment.setLikesCount(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("LIKE").get()));
+            comment.setDislikesCount(userCommentMarkRepository.countByCommentAndMark(comment, markRepository.findByName("DISLIKE").get()));
+
+            if (comment.getParent() == null) {
+                tree.putIfAbsent(comment, new ArrayList<>());
+            }
+        }
+
+        for (Comment comment : allComments) {
+            if (comment.getParent() != null) {
+                Comment tempParent = comment.getParent();
+                while (!tree.containsKey(tempParent) && tempParent.getParent() != null) {
+                    tempParent = tempParent.getParent();
+                }
+                Comment parent = commentMap.get(tempParent.getCommentId());
+                if (parent != null) {
+                    tree.get(parent).add(comment);
+                }
+            }
+        }
+
+        return tree;
+
+//        return tree.entrySet().stream()
+//                .collect(Collectors.toMap(
+//                        entry -> convertToDTO(entry.getKey()), // Преобразование ключа (Comment -> CommentResponseDTO)
+//                        entry -> entry.getValue().stream()     // Преобразование списка значений (List<Comment> -> List<CommentResponseDTO>)
+//                                .map(this::convertToDTO)           // Преобразование каждого Comment в CommentResponseDTO
+//                                .collect(Collectors.toList()),    // Сбор в List<CommentResponseDTO>
+//                        (oldValue, newValue) -> oldValue,     // Слияние дубликатов (не нужно в этом случае)
+//                        TreeMap::new                          // Указываем, что результат должен быть TreeMap
+//                ));
     }
 }
