@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VideoViewsRepository extends JpaRepository<VideoViews, Long> {
-    List<VideoViews> findByUser(User user);
+    List<VideoViews> findByUserOrderByViewedAtDesc(User user);
     List<VideoViews> findByVideo(Video video);
     Long countByVideo(Video video);
     Long countByUser(User user);

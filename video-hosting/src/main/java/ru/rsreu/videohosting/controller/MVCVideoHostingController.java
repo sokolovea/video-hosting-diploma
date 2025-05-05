@@ -73,26 +73,6 @@ public class MVCVideoHostingController {
         this.commentService = commentService;
     }
 
-    @GetMapping("/profile")
-    public String profile(Model model, Principal principal) {
-        String username = principal.getName();
-        User user = userRepository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        UserProfileDTO profileDto = new UserProfileDTO(
-                user.getLogin(),
-                user.getSurname(),
-                user.getName(),
-                user.getPatronymic(),
-                user.getEmail(),
-                user.getTelephone(),
-                user.getImagePath(),
-                user.getCreatedAt().toLocalDate()
-        );
-
-        model.addAttribute("user", profileDto);
-        return "profile";
-    }
-
 
     @GetMapping("/upload_video")
     public String uploadVideo(Model model) {

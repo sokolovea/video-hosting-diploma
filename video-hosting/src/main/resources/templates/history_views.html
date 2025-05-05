@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+        <html lang="ru">
+        <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="История просмотров на RadikTube">
+        <title>История просмотров</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<div th:replace="fragments/header.html"></div>
+
+<main>
+    <section class="history-section">
+        <div class="container">
+            <h2>История просмотров</h2>
+            <table class="history-table">
+                <thead>
+                <tr>
+                    <th>Видео</th>
+                    <th>Дата просмотра</th>
+                    <th>Действие</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="view : ${videoViews}">
+                    <td>
+                        <a th:href="@{/video/{id}(id=${view.video.videoId})}">
+                            <img th:src="${view.video.getImagePath()}" alt="Миниатюра" class="thumbnail">
+                            <span th:text="${view.video.getTitle()}">Название видео</span>
+                        </a>
+                    </td>
+                    <td th:text="${#temporals.format(view.getViewedAt(), 'dd.MM.yyyy HH.mm.ss')}"></td>
+                    <td>
+                        <a th:href="@{/video/{id}(id=${view.video.videoId})}" class="view-again-btn">Смотреть снова</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+
+</body>
+</html>
+</title>
+</head>
+<body>
+
+</body>
+</html>

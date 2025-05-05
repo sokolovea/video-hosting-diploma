@@ -234,3 +234,43 @@ button:hover {
     color: red;
 }
 
+.history-section {
+    padding: 2rem 1rem;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.history-table th, .history-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.history-table th {
+    background-color: #f4f4f4;
+}
+
+.thumbnail {
+    width: 50px;
+    height: auto;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.view-again-btn {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 0.25rem;
+}
+
+.view-again-btn:hover {
+    background-color: #0056b3;
+}
+
+

@@ -210,5 +210,5 @@ document.addEventListener('DOMContentLoaded', function () {
         commentList.innerHTML = commentHtml;
     }
 
-   // fetchCommentTree();
+   // fetыchCommentTree();
 });
