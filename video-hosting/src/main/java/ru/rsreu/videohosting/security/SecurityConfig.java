@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .antMatchers("/register", "/register/**", "/uploads/**", "/videos/**").permitAll()
                         .antMatchers("/admin/**").hasRole("ADMIN")
-                        .antMatchers("/login*", "/login/**",
+                        .antMatchers("/login", "/login/**", "/logout", "/logout/**",
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .antMatchers("/api/video/view").permitAll()
                         .antMatchers("/api/**").permitAll()
@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/")
                 )
                 .logout(logout -> logout
+                        .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                 );
         return http.build();

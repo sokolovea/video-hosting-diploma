@@ -50,7 +50,9 @@
                     <div class="user-menu">
                         <div class="dropdown-content">
                             <a th:href="@{/profile}">Профиль</a>
-                            <a th:href="@{/logout}">Выход</a>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit">Выход</button>
+                            </form>
                         </div>
                     </div>
                 </div>

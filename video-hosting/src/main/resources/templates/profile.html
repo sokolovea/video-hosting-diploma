@@ -7,7 +7,6 @@
     <meta th:name="_login_user" th:content="${user.login}"/>
     <title>Профиль пользователя</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <style>
         .edit-mode input {
             border: 1px solid #ccc;
@@ -51,8 +50,6 @@
             <div class="profile-info">
                 <div class="profile-image">
                     <img id="profile-image" th:src="@{${user.imagePath}}" alt="Фото профиля">
-                    <input type="file" id="profile-image-upload" style="display: none;">
-                    <label for="profile-image-upload" class="upload-btn">Изменить фото</label>
                 </div>
                 <div class="profile-details">
                     <p><strong>Логин:</strong> <span th:text="${user.login}"></span></p>
@@ -64,114 +61,12 @@
                     <p><strong>Дата регистрации:</strong> <span th:text="${user.createdAt}"></span></p>
                 </div>
             </div>
-            <button id="edit-profile-btn" class="edit-profile-btn">Редактировать профиль</button>
-            <div id="edit-controls" class="edit-mode" style="display: none;">
-                <button class="save-btn">Сохранить</button>
-                <button class="cancel-btn">Отменить</button>
-            </div>
-            <div id="loading">Сохранение...</div>
+            <a th:href="@{/profile/edit}">Редактировать профиль</a>
         </div>
     </section>
 </main>
 
 <div th:replace="fragments/footer.html"></div>
-
-<script>
-    $(document).ready(function () {
-        const editBtn = $('#edit-profile-btn');
-        const editControls = $('#edit-controls');
-        const editableFields = $('.editable');
-        const loadingIndicator = $('#loading');
-        let originalValues = {};
-
-
-        // Function to restore spans
-        function restoreSpans() {
-            $('input').each(function () {
-                const id = $(this).attr('id');
-                const value = $(this).val();
-                const span = `<span class="editable" id="${id}">${value}</span>`;
-                $(this).replaceWith(span);
-            });
-        }
-
-        // Enable edit mode
-        editBtn.on('click', function () {
-            originalValues = {};
-            $('.editable').each(function () {
-                const id = $(this).attr('id');
-                originalValues[id] = $(this).text();
-                const input = `<input type="text" id="${id}" value="${originalValues[id]}" />`;
-                $(this).replaceWith(input);
-            });
-
-            editBtn.hide();
-            editControls.show();
-        });
-
-        // Cancel edit
-        $('.cancel-btn').on('click', function () {
-            restoreSpans();
-            editBtn.show();
-            editControls.hide();
-        });
-
-        // Save changes
-        $('.save-btn').on('click', function () {
-
-            const updatedValues = {};
-            updatedValues["login"] = document.querySelector('meta[name="_login_user"]').content;
-
-            $('input').each(function () {
-                const id = $(this).attr('id');
-                if (id !== undefined) {
-                    updatedValues[id] = $(this).val();
-                }
-            });
-
-            loadingIndicator.show();
-
-            console.log(JSON.stringify(updatedValues));
-
-            $.ajax({
-                url: '/api/update-profile',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(updatedValues),
-                success: function () {
-                    restoreSpans();
-                    editBtn.show();
-                    editControls.hide();
-                    loadingIndicator.hide();
-                },
-                error: function () {
-                    loadingIndicator.hide();
-                    alert('Ошибка при сохранении данных.');
-                }
-            });
-        });
-
-        // Update profile image
-        $('#profile-image-upload').on('change', function () {
-            const formData = new FormData();
-            formData.append('image', this.files[0]);
-
-            $.ajax({
-                url: '/api/update-profile-image',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (response) {
-                    $('#profile-image').attr('src', response.newImagePath);
-                },
-                error: function () {
-                    alert('Ошибка при обновлении фото.');
-                }
-            });
-        });
-    });
-</script>
 
 </body>
 </html>

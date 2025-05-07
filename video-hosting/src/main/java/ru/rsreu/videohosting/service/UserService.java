@@ -57,6 +57,31 @@ public class UserService {
     }
 
     @Transactional
+    public void updateUser(RegistrationDTO dto) {
+        User user = new User();
+        user.setLogin(dto.getLogin());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setSurname(dto.getSurname());
+        user.setName(dto.getName());
+        user.setPatronymic(dto.getPatronymic());
+        user.setEmail(dto.getEmail());
+        user.setTelephone(dto.getTelephone());
+        user.setCreatedAt(LocalDateTime.now());
+        user.setImagePath(dto.getImagePath().toString());
+
+        if (!dto.getImagePath().isEmpty()) {
+            String filename = storageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
+            user.setImagePath(filename);
+        }
+
+        Role userRole = roleRepository.findByRoleName("USER")
+                .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
+        user.getRoles().add(userRole);
+
+        userRepository.save(user);
+    }
+
+    @Transactional
     public boolean isUserExist(String login) {
         return userRepository.findByLogin(login).isPresent();
     }

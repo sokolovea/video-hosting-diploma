@@ -2,11 +2,18 @@ package ru.rsreu.videohosting.controller;
 
 import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
+import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
@@ -14,7 +21,9 @@ import ru.rsreu.videohosting.repository.MarkRepository;
 import ru.rsreu.videohosting.repository.UserRepository;
 import ru.rsreu.videohosting.repository.VideoRepository;
 import ru.rsreu.videohosting.repository.VideoViewsRepository;
+import ru.rsreu.videohosting.service.UserService;
 
+import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 
@@ -24,14 +33,18 @@ public class VideoHostingController {
     private final MarkRepository markRepository;
     private final VideoViewsRepository videoViewsRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
-                                  @Autowired VideoViewsRepository videoViewsRepository, UserRepository userRepository) {
+                                  @Autowired VideoViewsRepository videoViewsRepository,
+                                  @Autowired UserRepository userRepository,
+                                  @Autowired UserService userService) {
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping("/")
@@ -65,5 +78,62 @@ public class VideoHostingController {
 
         model.addAttribute("user", profileDto);
         return "profile";
+    }
+
+    @GetMapping("/profile/edit")
+    public String profileEdit(Model model, Principal principal) {
+        String username = principal.getName();
+        User user = userRepository.findByLogin(username).get();
+        UserProfileEditDto profileEditDto = new UserProfileEditDto(
+                user.getLogin(),
+                "",
+                user.getSurname(),
+                user.getName(),
+                user.getPatronymic(),
+                user.getEmail(),
+                user.getTelephone(),
+                user.getImagePath()
+        );
+
+        model.addAttribute("user", profileEditDto);
+        return "profile_edit";
+    }
+
+
+    @PostMapping("/profile/edit")
+    public String registerUser(
+            @ModelAttribute("user") @Valid UserProfileEditDto userProfileEditDto,
+            BindingResult result,
+            RedirectAttributes redirectAttributes) {
+
+        if (result.hasErrors()) {
+            return "profile_edit";
+        }
+
+        try {
+//            if (userService.isUserExist(userProfileEditDto.getLogin())) {
+//                result.rejectValue("login", "login.exists");
+//            }
+            if (userProfileEditDto.getPassword().isEmpty()) {
+                result.rejectValue("email", "email.exists");
+            }
+
+            if (userService.isUserWithCurrentEmailExist(userProfileEditDto.getEmail())) {
+                result.rejectValue("email", "email.exists");
+            }
+
+            if (result.hasErrors()) {
+                return "registration";
+            }
+//            userService.registerNewUser(userProfileEditDto);
+            redirectAttributes.addFlashAttribute("success", "Регистрация прошла успешно!");
+            return "redirect:/login";
+        } catch (DataIntegrityViolationException e) {
+            result.rejectValue("login", "error.user", "Логин уже занят");
+            return "registration";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка регистрации: " + e.getMessage());
+            return "redirect:/register";
+        }
     }
 }

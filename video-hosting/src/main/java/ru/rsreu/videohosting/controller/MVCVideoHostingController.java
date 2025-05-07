@@ -3,7 +3,9 @@ package ru.rsreu.videohosting.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
+import ru.rsreu.videohosting.dto.VideoSearchDto;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.Class;
@@ -24,6 +27,7 @@ import ru.rsreu.videohosting.service.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.security.Principal;
+import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -215,7 +219,17 @@ public class MVCVideoHostingController {
 //    }
 
     @GetMapping("/search")
-    public String search() {
+    public String search(@RequestParam("query") String query, Model model) {
+        List<Video> videos = videoRepository.findByTitleContaining(query);
+        List<VideoSearchDto> videosDTO= new ArrayList<VideoSearchDto>();
+        for (Video video : videos) {
+            videosDTO.add(new VideoSearchDto(
+                    video,
+                    1, 2, videoViewsRepository.countByVideo(video)
+            ));
+        }
+        model.addAttribute("query", query);
+        model.addAttribute("videos", videosDTO);
         return "video_search";
     }
 //

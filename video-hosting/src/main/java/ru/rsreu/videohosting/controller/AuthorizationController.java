@@ -70,4 +70,10 @@ public class AuthorizationController {
         return "login";
     }
 
+//    @GetMapping("/logout")
+//    public String logoutPage(Model model) {
+//        model.addAttribute("user", new LoginDTO());
+//        return "login";
+//    }
+
 }

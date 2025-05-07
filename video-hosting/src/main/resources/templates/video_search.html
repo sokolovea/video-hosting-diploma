@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="RadikTube - результаты поиска">
-    <title>Результаты поиска | RadikTube</title>
+    <title th:text="'Результаты поиска | RadikTube'"></title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
-        .search-results {
+        .search-videos {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
-        .search-results tr {
+        .search-videos tr {
             border-bottom: 1px solid #eee;
         }
-        .search-results tr:hover {
+        .search-videos tr:hover {
             background-color: #f5f5f5;
         }
-        .search-results td {
+        .search-videos td {
             padding: 12px 15px;
             vertical-align: top;
         }
@@ -35,38 +35,45 @@
 </head>
 <body>
 <!-- Включаем шапку -->
-<div th:replace="fragments/header.html"></div>
+<div th:replace="fragments/header :: header"></div>
 
 <main>
     <section class="search-section">
         <div class="container">
-            <div class="search-query">Результаты поиска по запросу: "spring"</div>
+            <div class="search-query">
+                Результаты поиска по запросу:
+                <span th:text="${query}">Текст запроса</span>
+            </div>
 
-            <table class="search-results">
+            <table class="search-videos" th:if="${videos != null and videos.size() > 0}">
+                <thead>
                 <tr>
                     <th>Название видео</th>
                     <th>Рейтинг экспертов</th>
                     <th>Рейтинг пользователей</th>
                     <th>Просмотров</th>
                 </tr>
-                <tr>
-                    <td class="video-title"><a href="/video/13">Введение в Spring Boot</a></td>
-                    <td>+2</td>
-                    <td>0</td>
-                    <td>5</td>
+                </thead>
+                <tbody>
+                <tr th:each="video : ${videos}">
+                    <td class="video-title">
+                        <a th:href="@{/video/{id}(id=${video.getVideoId()})}" th:text="${video.getVideoTitle()}"></a>
+                    </td>
+                    <td th:text="${video.getVideoRatingExperts()}">+2</td>
+                    <td th:text="${video.getVideoRatingUsual()}">0</td>
+                    <td th:text="${video.getViews()}">5</td>
                 </tr>
-                <tr>
-                    <td class="video-title"><a href="/video/1">Spring - my new song</a></td>
-                    <td>0</td>
-                    <td>+3</td>
-                    <td>15</td>
-                </tr>
+                </tbody>
             </table>
+
+            <div th:if="${videos == null or videos.size() == 0}">
+                <p>Ничего не найдено по вашему запросу.</p>
+            </div>
         </div>
     </section>
 </main>
 
 <!-- Включаем подвал -->
-<div th:replace="fragments/footer.html"></div>
+<div th:replace="fragments/footer :: footer"></div>
 </body>
 </html>

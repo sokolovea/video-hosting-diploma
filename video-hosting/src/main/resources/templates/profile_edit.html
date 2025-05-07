@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Профиль пользователя">
+    <meta th:name="_login_user" th:content="${user.login}"/>
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        .edit-mode input {
+            border: 1px solid #ccc;
+            padding: 5px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .edit-mode button.save-btn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .edit-mode button.cancel-btn {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .edit-mode button {
+            margin-right: 10px;
+        }
+        #loading {
+            display: none;
+            font-size: 16px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+<script th:src="@{/js/inputmask.min.js}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const phoneInput = document.getElementById("telephone");
+        const errorMessage = document.getElementById("error-message");
+        const submitButton = document.getElementById("submit-button");
+
+        // Маска ввода: +0-(000)-000-00-00
+        Inputmask("+9-(999)-999-99-99").mask(phoneInput);
+
+        // Валидация номера телефона
+        phoneInput.addEventListener("input", () => {
+            const isValid = phoneInput.inputmask.isComplete();
+            if (isValid) {
+                errorMessage.style.display = "none";
+                phoneInput.style.borderColor = "";
+            } else {
+                errorMessage.style.display = "block";
+                errorMessage.textContent = "Введите корректный номер телефона";
+                phoneInput.style.borderColor = "red";
+            }
+        });
+
+        // Дополнительная обработка отправки формы
+        submitButton.addEventListener("click", (event) => {
+            if (!phoneInput.inputmask.isComplete()) {
+                event.preventDefault();
+                errorMessage.style.display = "block";
+                errorMessage.textContent = "Введите корректный номер телефона";
+                phoneInput.style.borderColor = "red";
+            }
+        });
+    });
+</script>
+<main>
+    <section class="profile-section">
+        <div class="container">
+            <h2>Профиль пользователя</h2>
+            <div class="profile-info">
+                <div class="profile-details">
+                    <form th:action="@{/profile_edit}" method="post" th:object="${user}" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="login">Логин (нельзя изменить)</label>
+                            <span id="login" th:text="*{login}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Пароль</label>
+                            <input type="password" th:field="*{password}" id="password" name="password" required placeholder="Введите ваш пароль">
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('password')}"
+                                  th:errors="*{password}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="surname">Фамилия</label>
+                            <input type="text" th:field="*{surname}" id="surname" name="surname" required placeholder="Введите вашу фамилию">
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('surname')}"
+                                  th:errors="*{surname}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Имя</label>
+                            <input type="text" th:field="*{name}" id="name" name="name" required placeholder="Введите ваше имя">
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('name')}"
+                                  th:errors="*{name}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patronymic">Отчество</label>
+                            <input type="text" th:field="*{patronymic}" id="patronymic" name="patronymic" placeholder="Введите ваше отчество">
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('patronymic')}"
+                                  th:errors="*{patronymic}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Электронная почта</label>
+                            <input type="email" th:field="*{email}" id="email" name="email" required placeholder="Введите ваш email">
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('email')}"
+                                  th:errors="*{email}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telephone">Телефон</label>
+                            <input type="tel" th:field="*{telephone}" id="telephone" name="telephone" required placeholder="Введите ваш телефон">
+                            <span id="error-message" style="color: red; display: none;">Введите корректный номер телефона</span>
+                            <span class="validationError"
+                                  th:if="${#fields.hasErrors('telephone')}"
+                                  th:errors="*{telephone}"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="imagePath">Изображение профиля</label>
+                            <input type="file" th:field="*{imagePath}" id="imagePath" name="imagePath" accept="image/*" required>
+                        </div>
+
+                        <button type="submit" id="submit-button">Обновить настройки профиля</button>
+                    </form>
+                </div>
+            </div>
+            <a th:href="@{/profile}">Назад к профилю</a>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer.html"></div>
+
+</body>
+</html>
