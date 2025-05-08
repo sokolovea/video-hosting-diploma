@@ -1,10 +1,12 @@
 package ru.rsreu.videohosting.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.PropertiesFactoryBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -27,6 +29,14 @@ public class WebConfig implements WebMvcConfigurer {
         messageSource.setBasename("classpath:messages");
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
+    }
+
+    @Bean
+    public PropertiesFactoryBean propertiesFileMapping() {
+        PropertiesFactoryBean factoryBean = new PropertiesFactoryBean();
+        factoryBean.setFileEncoding("UTF-8");
+        factoryBean.setLocation(new ClassPathResource("messages.properties"));
+        return factoryBean;
     }
 }
 

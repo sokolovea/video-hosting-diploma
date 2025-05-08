@@ -47,6 +47,7 @@
     <section class="profile-section">
         <div class="container">
             <h2>Профиль пользователя</h2>
+            <div class="alert alert-primary" role="alert" th:text="${success}" th:if="${success}"></div>
             <div class="profile-info">
                 <div class="profile-image">
                     <img id="profile-image" th:src="@{${user.imagePath}}" alt="Фото профиля">
@@ -58,7 +59,7 @@
                     <p><strong>Отчество:</strong> <span class="editable" id="patronymic" th:text="${user.patronymic}"></span></p>
                     <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
                     <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
-                    <p><strong>Дата регистрации:</strong> <span th:text="${user.createdAt}"></span></p>
+                    <p><strong>Дата регистрации:</strong> <span th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}"></span></p>
                 </div>
             </div>
             <a th:href="@{/profile/edit}">Редактировать профиль</a>

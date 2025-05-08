@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -14,8 +15,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileEditDto {
-    private String login;
     @NotBlank
+    private String login;
     private String password;
     @NotBlank
     private String surname;
@@ -27,5 +28,5 @@ public class UserProfileEditDto {
     private String email;
     @NotBlank
     private String telephone;
-    private String imagePath;
+    private MultipartFile imagePath;
 }

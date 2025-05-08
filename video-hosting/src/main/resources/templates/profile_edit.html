@@ -82,15 +82,16 @@
             <h2>Профиль пользователя</h2>
             <div class="profile-info">
                 <div class="profile-details">
-                    <form th:action="@{/profile_edit}" method="post" th:object="${user}" enctype="multipart/form-data">
+                    <form th:action="@{/profile/edit}" method="post" th:object="${user}" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="login">Логин (нельзя изменить)</label>
                             <span id="login" th:text="*{login}"></span>
+                            <input type="hidden" th:field="*{login}">
                         </div>
 
                         <div class="form-group">
                             <label for="password">Пароль</label>
-                            <input type="password" th:field="*{password}" id="password" name="password" required placeholder="Введите ваш пароль">
+                            <input type="password" th:field="*{password}" id="password" name="password" placeholder="Введите ваш пароль">
                             <span class="validationError"
                                   th:if="${#fields.hasErrors('password')}"
                                   th:errors="*{password}"></span>
@@ -138,8 +139,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="imagePath">Изображение профиля</label>
-                            <input type="file" th:field="*{imagePath}" id="imagePath" name="imagePath" accept="image/*" required>
+                            <label for="imagePath">Изображение профиля (обновить только при выборе)</label>
+                            <input type="file" th:field="*{imagePath}" id="imagePath" name="imagePath" accept="image/*">
                         </div>
 
                         <button type="submit" id="submit-button">Обновить настройки профиля</button>

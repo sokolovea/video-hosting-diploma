@@ -26,6 +26,7 @@ import ru.rsreu.videohosting.service.UserService;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 public class VideoHostingController {
@@ -92,7 +93,7 @@ public class VideoHostingController {
                 user.getPatronymic(),
                 user.getEmail(),
                 user.getTelephone(),
-                user.getImagePath()
+                null
         );
 
         model.addAttribute("user", profileEditDto);
@@ -111,29 +112,28 @@ public class VideoHostingController {
         }
 
         try {
-//            if (userService.isUserExist(userProfileEditDto.getLogin())) {
-//                result.rejectValue("login", "login.exists");
-//            }
-            if (userProfileEditDto.getPassword().isEmpty()) {
-                result.rejectValue("email", "email.exists");
+            boolean isEmailUnique = true;
+            if (userService.isUserWithCurrentEmailExist(userProfileEditDto.getEmail())) {
+                Optional<User> userWithSuchEmail = userRepository.findByEmail(userProfileEditDto.getEmail());
+                if (userWithSuchEmail.isPresent() && !userWithSuchEmail.get().getLogin().equals(userProfileEditDto.getLogin())) {
+                    isEmailUnique = false;
+                }
             }
 
-            if (userService.isUserWithCurrentEmailExist(userProfileEditDto.getEmail())) {
-                result.rejectValue("email", "email.exists");
+            if (!isEmailUnique) {
+                result.rejectValue("email", "email.exists" );
             }
 
             if (result.hasErrors()) {
-                return "registration";
+                return "profile_edit";
             }
-//            userService.registerNewUser(userProfileEditDto);
-            redirectAttributes.addFlashAttribute("success", "Регистрация прошла успешно!");
-            return "redirect:/login";
-        } catch (DataIntegrityViolationException e) {
-            result.rejectValue("login", "error.user", "Логин уже занят");
-            return "registration";
+
+            userService.updateUser(userProfileEditDto);
+            redirectAttributes.addFlashAttribute("success", "Обновление прошло успешно!");
+            return "redirect:/profile";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Ошибка регистрации: " + e.getMessage());
-            return "redirect:/register";
+            redirectAttributes.addFlashAttribute("error", "Ошибка обновления профиля. Попробуйте позднее");
+            return "redirect:/profile/edit";
         }
     }
 }

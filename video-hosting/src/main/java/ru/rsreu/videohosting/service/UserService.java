@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.rsreu.videohosting.dto.RegistrationDTO;
+import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.entity.Role;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.repository.RoleRepository;
@@ -57,26 +58,21 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(RegistrationDTO dto) {
-        User user = new User();
-        user.setLogin(dto.getLogin());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+    public void updateUser(UserProfileEditDto dto) {
+        User user = userRepository.findByLogin(dto.getLogin()).get();
+        if (!dto.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
         user.setSurname(dto.getSurname());
         user.setName(dto.getName());
         user.setPatronymic(dto.getPatronymic());
         user.setEmail(dto.getEmail());
         user.setTelephone(dto.getTelephone());
-        user.setCreatedAt(LocalDateTime.now());
-        user.setImagePath(dto.getImagePath().toString());
 
         if (!dto.getImagePath().isEmpty()) {
             String filename = storageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
             user.setImagePath(filename);
         }
-
-        Role userRole = roleRepository.findByRoleName("USER")
-                .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
-        user.getRoles().add(userRole);
 
         userRepository.save(user);
     }
