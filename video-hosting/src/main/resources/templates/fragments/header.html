@@ -26,8 +26,8 @@
                     <li th:classappend="${#request.getRequestURI().startsWith('/subscriptions')} ? 'active'">
                         <a th:href="@{/subscriptions}" sec:authorize="isAuthenticated()">Подписки</a>
                     </li>
-                    <li th:classappend="${#request.getRequestURI().startsWith('/subscriptions')} ? 'active'">
-                        <a th:href="@{/subscriptions}" sec:authorize="isAuthenticated()">История просмотра</a>
+                    <li th:classappend="${#request.getRequestURI().startsWith('/history_views')} ? 'active'">
+                        <a th:href="@{/history_views}" sec:authorize="isAuthenticated()">История просмотров</a>
                     </li>
                     <li> <!--sec:authorize="hasRole('AUTHOR')"-->
                         <a th:href="@{/upload_video}">Загрузить видео</a>

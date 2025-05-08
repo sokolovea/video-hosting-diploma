@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.rsreu.videohosting.repository.composite.HistoryId;
 
 import javax.persistence.*;
 import java.io.Serializable;

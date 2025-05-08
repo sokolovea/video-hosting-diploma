@@ -3,31 +3,20 @@ package ru.rsreu.videohosting.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.repository.query.Param;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.VideoSearchDto;
-import ru.rsreu.videohosting.dto.ViewRequestDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.Class;
 import ru.rsreu.videohosting.repository.*;
+import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 import ru.rsreu.videohosting.service.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.security.Principal;
-import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +35,7 @@ public class MVCVideoHostingController {
     private final StorageService storageService;
     private final VideoViewsRepository videoViewsRepository;
     private final UserVideoMarkRepository videoMarkRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final VideoService videoService;
     private final CustomWebClientService customWebClientService;
     private final CommentService commentService;
@@ -62,7 +52,8 @@ public class MVCVideoHostingController {
                                      @Autowired UserVideoMarkRepository videoMarkRepository,
                                      @Autowired VideoService videoService,
                                      @Autowired CustomWebClientService customWebClientService,
-                                     @Autowired CommentService commentService) {
+                                     @Autowired CommentService commentService,
+                                     @Autowired SubscriptionRepository subscriptionRepository) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.videoRepository = videoRepository;
@@ -75,6 +66,7 @@ public class MVCVideoHostingController {
         this.videoService = videoService;
         this.customWebClientService = customWebClientService;
         this.commentService = commentService;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
 
@@ -168,7 +160,8 @@ public class MVCVideoHostingController {
 
     @GetMapping("/video/{videoId}")
     public String video(@PathVariable("videoId") Long videoId, Model model,
-                        HttpServletRequest request) {
+                        HttpServletRequest request,
+                        Principal principal) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
 
         if (optionalVideo.isPresent()) {
@@ -182,41 +175,38 @@ public class MVCVideoHostingController {
             MarkType likeMark = markRepository.findByName("LIKE").get();
             MarkType dislikeMark = markRepository.findByName("DISLIKE").get();
 
+            Long currentUserId = null;
+            try {
+                if(principal != null) {
+                    currentUserId = userRepository.findByLogin(principal.getName()).get().getUserId();
+                }
+            } catch (Exception ignored) {}
+
+            model.addAttribute("currentUserId", currentUserId);
             model.addAttribute("video", video);
             model.addAttribute("commentTree", commentTree);
-            model.addAttribute("subscribers", 777);
+            model.addAttribute("subscribers", subscriptionRepository.countByAuthor(video.getAuthor()));
             model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
             model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMark(video, likeMark));
             model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
             model.addAttribute("likeId", likeMark.getMarkId());
             model.addAttribute("dislikeId", dislikeMark.getMarkId());
+
+            boolean isSubscribed = false;
+            User author = video.getAuthor();
+            if (principal != null) {
+                Optional<User> currentUser = userRepository.findByLogin(principal.getName());
+                if (currentUser.isPresent()) {
+                    isSubscribed = subscriptionRepository.existsById(new SubscriptionId(currentUser.get().getUserId(), author.getUserId()));
+                }
+            }
+            model.addAttribute("isSubscribed", isSubscribed);
+            model.addAttribute("authorId", author.getUserId());
         } else {
             return "redirect:/404";
         }
         return "video";
     }
-
-//    @PostMapping("/video/{videoId}/comment")
-//    public String addComment(@PathVariable Long videoId,
-//                             @RequestParam("commentText") String commentText,
-//                             Principal principal) {
-//        Optional<Video> videoOptional = videoRepository.findById(videoId);
-//        if (videoOptional.isPresent() && principal != null) {
-//            Video video = videoOptional.get();
-//            Optional<User> userOptional = userRepository.findByLogin(principal.getName());
-//            User user = userOptional.get();
-//
-//            Comment comment = new Comment();
-//            comment.setText(commentText);
-//            comment.setVideo(video);
-//            comment.setUser(user);
-//            comment.setIsModified(false);
-//
-//            commentRepository.save(comment);
-//        }
-//
-//        return "redirect:/video/" + videoId;
-//    }
 
     @GetMapping("/search")
     public String search(@RequestParam("query") String query, Model model) {
@@ -231,6 +221,15 @@ public class MVCVideoHostingController {
         model.addAttribute("query", query);
         model.addAttribute("videos", videosDTO);
         return "video_search";
+    }
+
+
+    @GetMapping("/subscriptions")
+    public String subscriptions(Model model, Principal principal) {
+        User user = userRepository.findByLogin(principal.getName()).get();
+        List<Subscription> subscriptions = subscriptionRepository.findBySubscriberOrderBySubscribedAtDesc(user);
+        model.addAttribute("subscriptions", subscriptions);
+        return "subscriptions";
     }
 //
 //

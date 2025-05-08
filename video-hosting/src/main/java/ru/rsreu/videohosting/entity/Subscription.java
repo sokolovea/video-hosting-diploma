@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(SubscriptionId.class)
 public class Subscription implements Serializable {
     @Id
     @ManyToOne

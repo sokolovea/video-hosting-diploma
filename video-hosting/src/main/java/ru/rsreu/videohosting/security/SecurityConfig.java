@@ -43,6 +43,8 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .antMatchers("/api/video/view").permitAll()
                         .antMatchers("/api/**").permitAll()
+                        .antMatchers("/").permitAll()
+                        .antMatchers("/video/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

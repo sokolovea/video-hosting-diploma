@@ -2,9 +2,6 @@ package ru.rsreu.videohosting.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.MapSerializer;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,11 +16,9 @@ import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.StorageService;
 import ru.rsreu.videohosting.service.VideoService;
-import ru.rsreu.videohosting.util.GsonUtil;
 import ru.rsreu.videohosting.util.JacksonUtil;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.Null;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
