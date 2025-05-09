@@ -65,7 +65,7 @@ public class UserRestController {
             Principal principal
     ) {
         if (principal == null) {
-            return ResponseEntity.status(400).body("You are not logged in");
+            return ResponseEntity.status(401).body("You are not logged in");
         }
         SubscriptionDTO subscriptionDTO = null;
         try {
@@ -86,8 +86,7 @@ public class UserRestController {
                 try {
                     subscriptionRepository.save(new Subscription(
                             subscriber.get(),
-                            author.get(),
-                            LocalDateTime.now()
+                            author.get()
                     ));
                 } catch (NoSuchElementException e) {
                     return ResponseEntity.status(400).body("User not found");

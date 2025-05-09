@@ -29,5 +29,13 @@ public class Subscription implements Serializable {
 
     @Column(updatable = false)
     private LocalDateTime subscribedAt = LocalDateTime.now();
+
+    @Transient
+    private boolean isSubscribed = true;
+
+    public Subscription(User subscriber, User author) {
+        this.subscriber = subscriber;
+        this.author = author;
+    }
 }
 

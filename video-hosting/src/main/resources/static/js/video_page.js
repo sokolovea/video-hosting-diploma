@@ -1,4 +1,6 @@
-function toggleReplyForm(button) {
+import { showLoginPrompt } from './authorize_window.js';
+
+export function toggleReplyForm(button) {
     const replyForm = button.closest('.comment-item').querySelector('.reply-form');
     if (replyForm.style.display === 'none' || replyForm.style.display === '') {
         replyForm.style.display = 'block';
@@ -38,6 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
+            if (response.status === 401) {
+                showLoginPrompt();
+                return;
+            }
             if (!response.ok) throw new Error('Ошибка сети');
 
             const data = await response.json();
@@ -57,6 +63,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -83,6 +91,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }),
             });
 
+            if (response.status === 401) {
+                showLoginPrompt();
+                return;
+            }
             if (!response.ok) throw new Error('Ошибка сети');
 
             const data = await response.json();
@@ -106,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 function sendPostRequest() {
-    console.log('!!!');
     const videoId = parseInt(document.querySelector('meta[name="_video_id"]').content, 10);
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const xhr = new XMLHttpRequest();
@@ -121,7 +132,6 @@ function sendPostRequest() {
             console.error('Error:', xhr.statusText);
         }
     };
-    console.log('!!!');
     const requestBody = JSON.stringify({ videoId: videoId });
     xhr.send(requestBody);
 }
@@ -145,6 +155,9 @@ function onVideoMark (markId) {
         },
     })
         .then(response => {
+            if (response.status === 401) {
+                showLoginPrompt();
+            }
             if (response.ok) {
                 return response.json(); // Предполагаем, что сервер возвращает JSON
             }
@@ -185,6 +198,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ commentText }),
             })
                 .then(response => {
+                    if (response.status === 401) {
+                        showLoginPrompt();
+                    }
                     if (response.ok) {
                         return response.json();
                     } else {
@@ -257,5 +273,22 @@ document.addEventListener('DOMContentLoaded', function () {
         commentList.innerHTML = commentHtml;
     }
 
-   // fetыchCommentTree();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const likeButton = document.getElementById('likeButton');
+
+    likeButton.addEventListener('click', () => {
+        onVideoMark(1); // DEBUG
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const likeButton = document.getElementById('dislikeButton');
+
+    likeButton.addEventListener('click', () => {
+        onVideoMark(2); // DEBUG
+    });
+});
+
+window.toggleReplyForm = toggleReplyForm;

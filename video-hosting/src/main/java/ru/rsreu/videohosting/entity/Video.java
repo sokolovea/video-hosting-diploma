@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.rsreu.videohosting.repository.UserVideoMarkRepository;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -17,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Table(name = "video")
 public class Video implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long videoId;
@@ -49,5 +52,6 @@ public class Video implements Serializable {
     public String getVideoPath() {
         return '/' + videoPath;
     }
+
 }
 

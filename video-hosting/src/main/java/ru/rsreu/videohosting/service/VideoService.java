@@ -2,12 +2,12 @@ package ru.rsreu.videohosting.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.rsreu.videohosting.dto.RatingDto;
+import ru.rsreu.videohosting.entity.MarkType;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
-import ru.rsreu.videohosting.repository.UserRepository;
-import ru.rsreu.videohosting.repository.VideoRepository;
-import ru.rsreu.videohosting.repository.VideoViewsRepository;
+import ru.rsreu.videohosting.repository.*;
 
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
@@ -27,6 +27,10 @@ public class VideoService {
     private UserRepository userRepository;
 
     private static final Duration VIEW_INTERVAL = Duration.ofHours(1);
+    @Autowired
+    private UserVideoMarkRepository userVideoMarkRepository;
+    @Autowired
+    private MarkRepository markRepository;
 
     public boolean canRecordView(Long videoId, String viewerId) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
@@ -61,6 +65,22 @@ public class VideoService {
         viewLog.setIpAddress(ipAddress);
         viewLog.setViewedAt(LocalDateTime.now());
         videoViewsRepository.save(viewLog);
+    }
+
+    public RatingDto getVideoRating(Long videoId) {
+        RatingDto ratingDto = new RatingDto();
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isPresent()) {
+            Video video = optionalVideo.get();
+            Long likesCountUser = userVideoMarkRepository.countByVideoAndMark (video, markRepository.findByName("LIKE").get());
+            Long marksCountUser = userVideoMarkRepository.countByVideo(video);
+
+            Long likesCountExpert = userVideoMarkRepository.countByVideoAndMark()
+            if (marksCount != 0) {
+                return likesCount / (double)marksCount * 100;
+            }
+        }
+        return ratingDto;
     }
 }
 

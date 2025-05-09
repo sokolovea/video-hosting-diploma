@@ -8,21 +8,33 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
-
 <div th:replace="fragments/header.html"></div>
 
-<main>
+<main class="main-layout">
+    <aside class="sidebar">
+        <h3>Категории</h3>
+        <ul>
+            <li><a href="/category/1">Музыка</a></li>
+            <li><a href="/category/2">Игры</a></li>
+            <li><a href="/category/3">Новости</a></li>
+            <li><a href="/category/4">Фильмы</a></li>
+        </ul>
+    </aside>
+
     <section class="video-section">
-        <div class="container">
-            <h2>Популярные видео</h2>
-            <div class="video-grid">
-                <div th:each="video : ${videos}" class="video-card">
-                    <a th:href="@{/video/{id}(id=${video.videoId})}">
-                        <img th:src="${video.getImagePath()}" th:alt="${video.getTitle()}">
+        <h2>Популярные видео</h2>
+        <div class="video-grid">
+            <div th:each="video : ${videos}" class="video-card">
+                <a th:href="@{/video/{id}(id=${video.videoId})}">
+                    <img th:src="${video.getImagePath()}" th:alt="${video.getTitle()}">
+                    <div class="video-info">
                         <h3 th:text="${video.getTitle()}">Заголовок видео</h3>
-                    </a>
-                    <p th:text="${video.getDescription()}">Описание видео</p>
-                </div>
+                        <p>
+                            <a th:text="'Автор: ' + ${video.getAuthor().getLogin()}" th:href="@{/}">Автор</a>
+                        </p>
+                        <p th:text="'Рейтинг: ' + ${video.getRatingPercents()} + '%'" >Рейтинг</p>
+                    </div>
+                </a>
             </div>
         </div>
     </section>

@@ -10,7 +10,8 @@
     <meta th:name="_author_id" th:content="${video.getAuthor().getUserId()}"/>
     <title th:text="${video.title} + ' | RadikTube'">Просмотр видео | RadikTube</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script th:src="@{/js/video_page.js}"></script>
+    <script type="module"  th:src="@{/js/authorize_window.js}"></script>
+    <script type="module" th:src="@{/js/video_page.js}"></script>
     <style>
     </style>
 </head>
@@ -31,11 +32,11 @@
                 </div>
 
                 <div class="video-actions">
-                    <button class="action-button" onclick="onVideoMark(1)" id="likeButton"> <!-- DEBUG -->
+                    <button class="action-button" id="likeButton"> <!-- DEBUG -->
                         <span>👍</span>
                     </button>
                     <span id="likeCount" th:text="${videoLikes}">Количество лайков</span>
-                    <button class="action-button" onclick="onVideoMark(2)" id="dislikeButton">
+                    <button class="action-button" id="dislikeButton">
                         <span>👎</span>
                     </button>
                     <span id="dislikeCount" th:text="${videoDislikes}">Количество дизлайков</span>

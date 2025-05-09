@@ -103,20 +103,69 @@ main {
     background-color: white;
     flex-grow: 1;
 }
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-layout {
+    display: flex;
+    flex-grow: 1;
+    margin-top: 20px;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-right: 20px;
+}
+
+.sidebar h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    margin-bottom: 10px;
+}
+
+.sidebar a {
+    text-decoration: none;
+    color: #0073e6;
+}
+
+.sidebar a:hover {
+    text-decoration: underline;
+}
 
 .video-section {
-    text-align: center;
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
 }
 
 .video-section h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
     margin-bottom: 20px;
 }
 
 .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 15px;
 }
 
 .video-card {
@@ -124,20 +173,34 @@ main {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
     overflow: hidden;
-    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.video-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .video-card img {
     width: 100%;
-    height: auto;
-    border-bottom: 1px solid #ddd;
+    height: 180px;
+    object-fit: cover;
 }
 
-.video-card h3 {
+.video-info {
     padding: 15px;
-    font-size: 1.1rem;
-    background-color: #f9f9f9;
 }
+
+.video-info h3 {
+    font-size: 1rem;
+    margin: 0 0 10px;
+}
+
+.video-info p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
 
 /* Футер */
 footer {
