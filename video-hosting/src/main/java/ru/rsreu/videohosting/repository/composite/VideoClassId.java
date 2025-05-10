@@ -11,5 +11,5 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class VideoClassId implements Serializable {
     private Long video;
-    private Long videoClass;
+    private Long videoMultimediaClass;
 }

@@ -13,11 +13,11 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Class implements Serializable {
+public class MultimediaClass implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long classId;
+    private Long multimediaClassId;
 
-    private String className;
+    private String multimediaClassName;
 }
 

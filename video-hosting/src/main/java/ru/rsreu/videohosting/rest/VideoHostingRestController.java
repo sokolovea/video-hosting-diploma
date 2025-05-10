@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class VideoHostingRestController {
     private static final Logger log = LoggerFactory.getLogger(VideoHostingRestController.class);
 
-    private final ClassRepository classRepository;
+    private final MultimediaClassRepository multimediaClassRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final MarkRepository markRepository;
@@ -39,17 +39,20 @@ public class VideoHostingRestController {
     private final StorageService storageService;
     private final VideoService videoService;
     private final UserVideoMarkRepository userVideoMarkRepository;
+    private final RoleRepository roleRepository;
 
     public VideoHostingRestController(@Autowired UserRepository userRepository,
-                                      @Autowired ClassRepository classRepository,
+                                      @Autowired MultimediaClassRepository multimediaClassRepository,
                                       @Autowired VideoRepository videoRepository,
                                       @Autowired CommentRepository commentRepository,
                                       @Autowired MarkRepository markRepository,
                                       @Autowired UserCommentMarkRepository commentMarkRepository,
                                       @Autowired StorageService storageService,
-                                      @Autowired VideoService videoService, UserVideoMarkRepository userVideoMarkRepository) {
+                                      @Autowired VideoService videoService,
+                                      @Autowired UserVideoMarkRepository userVideoMarkRepository,
+                                      @Autowired RoleRepository roleRepository) {
         this.userRepository = userRepository;
-        this.classRepository = classRepository;
+        this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.markRepository = markRepository;
@@ -57,6 +60,7 @@ public class VideoHostingRestController {
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoService = videoService;
         this.userVideoMarkRepository = userVideoMarkRepository;
+        this.roleRepository = roleRepository;
     }
 
     @PostMapping("/{videoId}/mark")
@@ -89,6 +93,11 @@ public class VideoHostingRestController {
 
 
         userVideoMarkRepository.save(userVideoMark);
+
+//        HashSet<Role> roles = new HashSet<>();
+//        roles.add(roleRepository.findByRoleName("USER").get());
+
+
         Long likesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("LIKE").get());
         Long dislikesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("DISLIKE").get());
         return ResponseEntity.status(HttpStatus.CREATED).body(new MarkStatisticsDTO(likesCount, dislikesCount, markOptional.get().getMarkId()));

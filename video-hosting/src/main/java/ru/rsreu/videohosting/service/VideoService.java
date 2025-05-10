@@ -70,16 +70,18 @@ public class VideoService {
     public RatingDto getVideoRating(Long videoId) {
         RatingDto ratingDto = new RatingDto();
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
-        if (optionalVideo.isPresent()) {
-            Video video = optionalVideo.get();
-            Long likesCountUser = userVideoMarkRepository.countByVideoAndMark (video, markRepository.findByName("LIKE").get());
-            Long marksCountUser = userVideoMarkRepository.countByVideo(video);
-
-            Long likesCountExpert = userVideoMarkRepository.countByVideoAndMark()
-            if (marksCount != 0) {
-                return likesCount / (double)marksCount * 100;
-            }
-        }
+//        if (optionalVideo.isPresent()) {
+//            Video video = optionalVideo.get();
+//            Long likesCountUser = userVideoMarkRepository.countByVideoAndMark (video, markRepository.findByName("LIKE").get());
+//            Long marksCountUser = userVideoMarkRepository.countByVideo(video);
+//
+//            Long likesCountExpert = userVideoMarkRepository.countByVideoAndMark();
+//            if (marksCount != 0) {
+//                return likesCount / (double)marksCount * 100;
+//            }
+//        }
+        ratingDto.setRatingExpertPercent(80);
+        ratingDto.setRatingUserPercent(90);
         return ratingDto;
     }
 }

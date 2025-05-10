@@ -7,5 +7,5 @@ import ru.rsreu.videohosting.repository.composite.VideoClassId;
 import java.util.Optional;
 
 public interface VideoClassRepository extends JpaRepository<VideoClass, VideoClassId> {
-    Optional<VideoClass> findByVideoClassClassName(String className);
+//    Optional<VideoClass> findByVideoClassClassName(String className);
 }

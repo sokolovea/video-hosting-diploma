@@ -23,7 +23,7 @@ public class VideoClass implements Serializable {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "class_id")
-    private Class videoClass;
+    @JoinColumn(name = "multimedia_class_id")
+    private MultimediaClass videoMultimediaClass;
 }
 

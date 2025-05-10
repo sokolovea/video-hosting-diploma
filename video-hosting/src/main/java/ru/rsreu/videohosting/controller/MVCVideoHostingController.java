@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.rsreu.videohosting.dto.VideoSearchDto;
 import ru.rsreu.videohosting.entity.*;
-import ru.rsreu.videohosting.entity.Class;
+import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 import ru.rsreu.videohosting.service.*;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class MVCVideoHostingController {
 
     private static final Logger log = LoggerFactory.getLogger(MVCVideoHostingController.class);
-    private final ClassRepository classRepository;
+    private final MultimediaClassRepository multimediaClassRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final MarkRepository markRepository;
@@ -39,10 +39,11 @@ public class MVCVideoHostingController {
     private final VideoService videoService;
     private final CustomWebClientService customWebClientService;
     private final CommentService commentService;
+    private final RoleRepository roleRepository;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
-                                     @Autowired ClassRepository classRepository,
+                                     @Autowired MultimediaClassRepository multimediaClassRepository,
                                      @Autowired VideoRepository videoRepository,
                                      @Autowired CommentRepository commentRepository,
                                      @Autowired MarkRepository markRepository,
@@ -53,9 +54,9 @@ public class MVCVideoHostingController {
                                      @Autowired VideoService videoService,
                                      @Autowired CustomWebClientService customWebClientService,
                                      @Autowired CommentService commentService,
-                                     @Autowired SubscriptionRepository subscriptionRepository) {
+                                     @Autowired SubscriptionRepository subscriptionRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
-        this.classRepository = classRepository;
+        this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.markRepository = markRepository;
@@ -67,12 +68,13 @@ public class MVCVideoHostingController {
         this.customWebClientService = customWebClientService;
         this.commentService = commentService;
         this.subscriptionRepository = subscriptionRepository;
+        this.roleRepository = roleRepository;
     }
 
 
     @GetMapping("/upload_video")
     public String uploadVideo(Model model) {
-        List<String> classes = classRepository.getAllClassNames();
+        List<String> classes = multimediaClassRepository.getAllMultimediaClassNames();
         model.addAttribute("classes", classes);
         return "upload_video";
     }
@@ -107,8 +109,8 @@ public class MVCVideoHostingController {
         video.setVideoPath(videoPath);
         video.setImagePath(imagePath);
 
-        List<Class> classes = classRepository.findAllByClassNameIn(classesString);
-        video.setClasses(classes);
+        Set<MultimediaClass> multimediaClasses = multimediaClassRepository.findAllByMultimediaClassNameIn(classesString);
+        video.setMultimediaClasses(multimediaClasses);
         Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
         if (optionalUser.isPresent()) {
             video.setAuthor(optionalUser.get());
@@ -187,8 +189,11 @@ public class MVCVideoHostingController {
             model.addAttribute("commentTree", commentTree);
             model.addAttribute("subscribers", subscriptionRepository.countByAuthor(video.getAuthor()));
             model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
-            model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMark(video, likeMark));
-            model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
+
+            HashSet<Role> roles = new HashSet<>();
+            roles.add(roleRepository.findByRoleName("USER").get());
+            model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMarkAndUserRoles(video, likeMark, roles));
+            model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMarkAndUserRoles(video, dislikeMark, roles));
             model.addAttribute("likeId", likeMark.getMarkId());
             model.addAttribute("dislikeId", dislikeMark.getMarkId());
 

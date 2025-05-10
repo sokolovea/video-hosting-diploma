@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.videohosting.dto.*;
 import ru.rsreu.videohosting.entity.*;
@@ -17,7 +16,6 @@ import ru.rsreu.videohosting.service.StorageService;
 import ru.rsreu.videohosting.service.VideoService;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -27,7 +25,7 @@ import java.util.*;
 public class UserRestController {
     private static final Logger log = LoggerFactory.getLogger(VideoHostingRestController.class);
 
-    private final ClassRepository classRepository;
+    private final MultimediaClassRepository multimediaClassRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final MarkRepository markRepository;
@@ -38,7 +36,7 @@ public class UserRestController {
     private final UserVideoMarkRepository userVideoMarkRepository;
     private final SubscriptionRepository subscriptionRepository;
 
-    public UserRestController(@Autowired ClassRepository classRepository,
+    public UserRestController(@Autowired MultimediaClassRepository multimediaClassRepository,
                               @Autowired VideoRepository videoRepository,
                               @Autowired CommentRepository commentRepository,
                               @Autowired MarkRepository markRepository,
@@ -47,7 +45,7 @@ public class UserRestController {
                               @Autowired StorageService storageService,
                               @Autowired VideoService videoService,
                               @Autowired UserVideoMarkRepository userVideoMarkRepository, SubscriptionRepository subscriptionRepository) {
-        this.classRepository = classRepository;
+        this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.markRepository = markRepository;

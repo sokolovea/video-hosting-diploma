@@ -6,12 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
+import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.Role;
+import ru.rsreu.videohosting.entity.RoleAssignment;
 import ru.rsreu.videohosting.entity.User;
+import ru.rsreu.videohosting.repository.MultimediaClassRepository;
 import ru.rsreu.videohosting.repository.RoleRepository;
 import ru.rsreu.videohosting.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -20,16 +24,18 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final StorageService storageService;
     private final PasswordEncoder passwordEncoder;
+    private final MultimediaClassRepository multimediaClassRepository;
 
 
     @Autowired
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
-                       StorageService storageService, @Autowired PasswordEncoder passwordEncoder) {
+                       StorageService storageService, @Autowired PasswordEncoder passwordEncoder, MultimediaClassRepository multimediaClassRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.storageService = storageService;
         this.passwordEncoder = passwordEncoder;
+        this.multimediaClassRepository = multimediaClassRepository;
     }
 
     @Transactional
@@ -52,7 +58,11 @@ public class UserService {
 
         Role userRole = roleRepository.findByRoleName("USER")
                 .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
-        user.getRoles().add(userRole);
+        List<MultimediaClass> multimediaClasses = multimediaClassRepository.getAllMultimediaClasses();
+        for (MultimediaClass multimediaClass: multimediaClasses) {
+            user.getRoleAssignments().add(
+                    new RoleAssignment(user, userRole, multimediaClass, LocalDateTime.now(), false));
+        }
 
         userRepository.save(user);
     }

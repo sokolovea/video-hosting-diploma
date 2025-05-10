@@ -1,13 +1,32 @@
 package ru.rsreu.videohosting.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.composite.UserVideoMarkId;
 
 import java.util.Set;
 
 public interface UserVideoMarkRepository extends JpaRepository<UserVideoMark, UserVideoMarkId> {
-    Long countByVideoAndMarkAndUserRoles(Video video, MarkType mark, Set<Role> user_roles);
+
+    @Query("""
+    SELECT COUNT(uvm)
+    FROM UserVideoMark uvm
+    JOIN uvm.user u
+    JOIN u.roleAssignments ra
+    JOIN uvm.video v
+    WHERE uvm.video = :video
+      AND uvm.mark = :mark
+      AND ra.role IN :roles
+      AND ra.multimediaClass IN v.multimediaClasses
+""") // DEBUG DEBUG DEBUG!!!
+    Long countByVideoAndMarkAndUserRoles(
+            @Param("video") Video video,
+            @Param("mark") MarkType mark,
+            @Param("roles") Set<Role> userRoles
+    );
     Long countByVideo(Video video);
-//    Long countByUserAndMark(User user, MarkType mark);
+    Long countByVideoAndMark(Video video, MarkType mark);
+    Long countByUserAndMark(User user, MarkType mark);
 }

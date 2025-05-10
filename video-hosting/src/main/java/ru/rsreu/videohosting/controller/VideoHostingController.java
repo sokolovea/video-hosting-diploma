@@ -1,9 +1,6 @@
 package ru.rsreu.videohosting.controller;
 
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -12,7 +9,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
-import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.entity.User;
@@ -35,21 +31,21 @@ public class VideoHostingController {
     private final UserService userService;
 
     private final JdbcRatingDao jdbcRatingDao;
-    private final ClassRepository classRepository;
+    private final MultimediaClassRepository multimediaClassRepository;
 
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
                                   @Autowired VideoViewsRepository videoViewsRepository,
                                   @Autowired UserRepository userRepository,
                                   @Autowired UserService userService,
-                                  @Autowired JdbcRatingDao jdbcRatingDao, ClassRepository classRepository) {
+                                  @Autowired JdbcRatingDao jdbcRatingDao, MultimediaClassRepository multimediaClassRepository) {
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.jdbcRatingDao = jdbcRatingDao;
-        this.classRepository = classRepository;
+        this.multimediaClassRepository = multimediaClassRepository;
     }
 
     @GetMapping("/")
@@ -70,7 +66,7 @@ public class VideoHostingController {
     public String profile(Model model, Principal principal) {
         String username = principal.getName();
         User user = userRepository.findByLogin(username).get();
-        var a = jdbcRatingDao.getUserRating(user, classRepository.getAllClasses());
+        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
         UserProfileDTO profileDto = new UserProfileDTO(
                 user.getLogin(),
                 user.getSurname(),

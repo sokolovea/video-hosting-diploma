@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
-import ru.rsreu.videohosting.repository.UserVideoMarkRepository;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -38,9 +37,9 @@ public class Video implements Serializable {
     @JoinTable(
             name = "video_class",
             joinColumns = @JoinColumn(name = "video_id"),
-            inverseJoinColumns = @JoinColumn(name = "class_id")
+            inverseJoinColumns = @JoinColumn(name = "multimedia_class_id")
     )
-    private List<Class> classes;
+    private Set<MultimediaClass> multimediaClasses;
 
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

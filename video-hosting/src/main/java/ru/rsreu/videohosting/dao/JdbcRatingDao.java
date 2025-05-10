@@ -3,7 +3,7 @@ package ru.rsreu.videohosting.dao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.rsreu.videohosting.entity.Class;
+import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.repository.*;
 
@@ -28,8 +28,8 @@ public class JdbcRatingDao {
                 join "user" on 	"video".author_id = "user".user_id
                 join "mark_type" on "mark_type".mark_id = "user_video_mark".mark
                 join "video_class" on "video_class".video_id = "video".video_id
-                join "class" on "class".class_id = "video_class".class_id
-            where "user".user_id = ? and "mark_type"."name" = ? and "class".class_name = ?""";
+                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".class_id
+            where "user".user_id = ? and "mark_type"."name" = ? and "multimedia_class".multimedia_class_name = ?""";
 
     private final String likesDislikesUserByCommentsCount = """
             SELECT count(*)
@@ -39,8 +39,8 @@ public class JdbcRatingDao {
             	join "mark_type" on "mark_type".mark_id = "user_comment_mark".mark
             	join "video" on "comment".video_id = "video".video_id
             	join "video_class" on "video_class".video_id = "video".video_id
-            	join "class" on "class".class_id = "video_class".class_id
-            where "user".user_id = ? and "mark_type"."name" = ? and "class".class_name = ?""";
+                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".class_id
+            where "user".user_id = ? and "mark_type"."name" = ? and "multimedia_class".multimedia_class_name = ?""";
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
 
@@ -58,11 +58,11 @@ public class JdbcRatingDao {
         this.commentRepository = commentRepository;
     }
 
-    public Map<Class, Double> getUserRating(User user, List<Class> classificators) {
-        HashMap<Class, Double> userRating = new HashMap<>();
-        for (Class classificator : classificators) {
-            Object[] paramsLikes = {user.getUserId(), "LIKE", classificator.getClassName()};
-            Object[] paramsDislikes = {user.getUserId(), "DISLIKE", classificator.getClassName()};
+    public Map<MultimediaClass, Double> getUserRating(User user, List<MultimediaClass> classificators) {
+        HashMap<MultimediaClass, Double> userRating = new HashMap<>();
+        for (MultimediaClass classificator : classificators) {
+            Object[] paramsLikes = {user.getUserId(), "LIKE", classificator.getMultimediaClassName()};
+            Object[] paramsDislikes = {user.getUserId(), "DISLIKE", classificator.getMultimediaClassName()};
             Long likesOnUserVideos = this.jdbcTemplate.queryForObject(likesDislikesUserByVideoCount,
                     paramsLikes, Long.class);
             Long dislikesOnUserVideos = this.jdbcTemplate.queryForObject(likesDislikesUserByVideoCount,
