@@ -42,15 +42,22 @@ CREATE TABLE "role" (
     role_name VARCHAR(50) NOT NULL
 );
 
--- Создание таблицы "playlist"
 CREATE TABLE playlist (
     playlist_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(255),
+    name VARCHAR(255) NOT NULL,
     user_id BIGINT REFERENCES "user"(user_id),
-    video_id BIGINT REFERENCES "video"(video_id),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX idx_playlist_user_id ON playlist(user_id);
+
+CREATE TABLE playlist_video (
+    playlist_id BIGINT REFERENCES playlist(playlist_id) ON DELETE CASCADE,
+    video_id BIGINT REFERENCES "video"(video_id) ON DELETE CASCADE,
+    PRIMARY KEY (playlist_id, video_id)
+);
+CREATE INDEX idx_playlist_video_playlist_id ON playlist_video(playlist_id);
+CREATE INDEX idx_playlist_video_video_id ON playlist_video(video_id);
+
 
 -- Создание таблицы "comment"
 CREATE TABLE comment (

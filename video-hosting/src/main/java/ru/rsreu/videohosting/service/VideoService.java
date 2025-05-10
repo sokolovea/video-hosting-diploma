@@ -32,11 +32,15 @@ public class VideoService {
     @Autowired
     private MarkRepository markRepository;
 
-    public boolean canRecordView(Long videoId, String viewerId) {
+    public boolean canRecordView(Long videoId, Long userId, String viewerId) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
         if (optionalVideo.isPresent()) {
-
-            LocalDateTime lastViewTime = videoViewsRepository.findLastViewTimeByVideoAndIpAddress(optionalVideo.get().getVideoId(), viewerId);
+            LocalDateTime lastViewTime = null;
+            if (userRepository.findById(userId).isPresent()) {
+                lastViewTime = videoViewsRepository.findLastViewTimeByVideoAndUserId(optionalVideo.get().getVideoId(), userId);
+            } else {
+                lastViewTime = videoViewsRepository.findLastViewTimeByVideoAndIpAddress(optionalVideo.get().getVideoId(), viewerId);
+            }
 
             return lastViewTime == null || Duration.between(lastViewTime, LocalDateTime.now()).compareTo(VIEW_INTERVAL) > 0;
         }

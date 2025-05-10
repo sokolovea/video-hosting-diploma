@@ -29,7 +29,7 @@
                             <span th:text="${view.video.getTitle()}">Название видео</span>
                         </a>
                     </td>
-                    <td th:text="${#temporals.format(view.getViewedAt(), 'dd.MM.yyyy HH.mm.ss')}"></td>
+                    <td th:text="${#temporals.format(view.getViewedAt(), 'dd.MM.yyyy HH:mm:ss')}"></td>
                     <td>
                         <a th:href="@{/video/{id}(id=${view.video.videoId})}" class="view-again-btn">Смотреть снова</a>
                     </td>

@@ -189,9 +189,10 @@ public class VideoHostingRestController {
                 .map(f -> f.split(",")[0])
                 .orElse(request.getRemoteAddr());
 
-        if (videoService.canRecordView(viewRequestDTO.getVideoId(), ipAddress)) {
+        Long userId = principal == null ? null : userRepository.findByLogin(principal.getName()).get().getUserId();
+        if (videoService.canRecordView(viewRequestDTO.getVideoId(), userId ,ipAddress)) {
             try {
-                videoService.recordView(viewRequestDTO.getVideoId(), principal == null ? null : userRepository.findByLogin(principal.getName()).get().getUserId(), ipAddress);
+                videoService.recordView(viewRequestDTO.getVideoId(), userId, ipAddress);
             } catch (NoSuchElementException e) {
                 return ResponseEntity.status(400).body("Video or user not found");
             }

@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
+import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
@@ -19,8 +20,7 @@ import ru.rsreu.videohosting.service.UserService;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 public class VideoHostingController {
@@ -29,6 +29,7 @@ public class VideoHostingController {
     private final VideoViewsRepository videoViewsRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final PlaylistRepository playlistRepository;
 
     private final JdbcRatingDao jdbcRatingDao;
     private final MultimediaClassRepository multimediaClassRepository;
@@ -38,7 +39,9 @@ public class VideoHostingController {
                                   @Autowired VideoViewsRepository videoViewsRepository,
                                   @Autowired UserRepository userRepository,
                                   @Autowired UserService userService,
-                                  @Autowired JdbcRatingDao jdbcRatingDao, MultimediaClassRepository multimediaClassRepository) {
+                                  @Autowired JdbcRatingDao jdbcRatingDao,
+                                  @Autowired MultimediaClassRepository multimediaClassRepository,
+                                  @Autowired PlaylistRepository playlistRepository) {
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
         this.videoViewsRepository = videoViewsRepository;
@@ -46,6 +49,7 @@ public class VideoHostingController {
         this.userService = userService;
         this.jdbcRatingDao = jdbcRatingDao;
         this.multimediaClassRepository = multimediaClassRepository;
+        this.playlistRepository = playlistRepository;
     }
 
     @GetMapping("/")
@@ -136,5 +140,31 @@ public class VideoHostingController {
             redirectAttributes.addFlashAttribute("error", "Ошибка обновления профиля. Попробуйте позднее");
             return "redirect:/profile/edit";
         }
+    }
+
+    @GetMapping("/playlist")
+    public String playlist(Model model, Principal principal) {
+        String username = principal.getName();
+        User user = userRepository.findByLogin(username).get();
+        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
+        UserProfileDTO profileDto = new UserProfileDTO(
+                user.getLogin(),
+                user.getSurname(),
+                user.getName(),
+                user.getPatronymic(),
+                user.getEmail(),
+                user.getTelephone(),
+                user.getImagePath(),
+                user.getCreatedAt().toLocalDate()
+        );
+
+        List<Playlist> playlists = playlistRepository.findByUser(user);
+//        for (Playlist playlist : playlists) {
+//            playlist.setAllVideos(videoRepository.findVideosByPlaylist(playlist));
+//        }
+        model.addAttribute("playlists", playlists);
+        model.addAttribute("user", profileDto);
+        model.addAttribute("selectedPlaylist", new Playlist());
+        return "playlist";
     }
 }

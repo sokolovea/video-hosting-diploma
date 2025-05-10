@@ -15,8 +15,8 @@ public interface VideoViewsRepository extends JpaRepository<VideoViews, Long> {
     List<VideoViews> findByVideo(Video video);
     Long countByVideo(Video video);
     Long countByUser(User user);
-    @Query("SELECT MAX(v.viewedAt) FROM VideoViews v WHERE v.video = :video AND v.user = :user")
-    LocalDateTime findLastViewTimeByVideoAndUser(@Param("video") Video video, @Param("user") User user);
+    @Query("SELECT MAX(v.viewedAt) FROM VideoViews v WHERE v.video.videoId = :videoId AND v.user.userId = :userId")
+    LocalDateTime findLastViewTimeByVideoAndUserId(@Param("videoId") Long videoId, @Param("userId") Long userId);
 
     @Query("SELECT MAX(v.viewedAt) FROM VideoViews v WHERE v.video.videoId = :videoId AND v.ipAddress = :ipAddress")
     LocalDateTime findLastViewTimeByVideoAndIpAddress(@Param("videoId") Long videoId, @Param("ipAddress") String ipAddress);

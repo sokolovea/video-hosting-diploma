@@ -7,72 +7,160 @@
   <title>Мои плейлисты</title>
   <link rel="stylesheet" th:href="@{/css/styles.css}">
   <style>
-    .playlists-section {
-      margin-top: 20px;
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+
+    .playlists-section h2, .playlist-videos-section h2 {
       text-align: center;
+      margin-bottom: 20px;
     }
+
+    .create-playlist {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
     .playlist-list {
-      margin: 0 auto;
-      max-width: 600px;
+      margin-bottom: 20px;
     }
+
     .playlist-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 10px;
       margin-bottom: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
       background-color: #f9f9f9;
     }
-    .playlist-card h4 {
-      margin: 0 0 10px 0;
-    }
+
     .playlist-buttons {
       display: flex;
       gap: 10px;
     }
-    .edit-button,
-    .delete-button {
+
+    .playlist-buttons button {
       padding: 5px 10px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    .edit-button {
-      background-color: #007bff;
+
+    .view-button {
+      background-color: #28a745;
       color: white;
     }
+
     .delete-button {
       background-color: #ff6666;
       color: white;
     }
+
+    .playlist-videos {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .playlist-videos li {
+      margin-bottom: 10px;
+    }
+
+    .thumbnail {
+      max-width: 100px;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    .playlist-videos-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .playlist-videos-table th, .playlist-videos-table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    .playlist-videos-table th {
+      background-color: #f2f2f2;
+    }
+
+    .thumbnail {
+      max-width: 100px;
+      height: auto;
+      border-radius: 5px;
+    }
+
   </style>
 </head>
 <body>
+
 <div th:replace="fragments/header.html"></div>
 
 <main>
-  <section class="playlists-section">
-    <div class="container">
-      <h2>Мои плейлисты</h2>
+  <div class="container">
+    <section class="playlists-section">
+      <h2>Управление плейлистами</h2>
+      <form class="create-playlist" method="post" th:action="@{/playlists/create}">
+        <input type="text" name="name" placeholder="Введите название плейлиста" required>
+        <button type="submit">Создать</button>
+      </form>
+
       <div class="playlist-list">
-        <div class="playlist-card">
-          <h4>Плейлист 1</h4>
-          <div class="playlist-buttons">
-            <button class="edit-button">Редактировать</button>
-            <button class="delete-button">Удалить</button>
+        <form th:each="playlist : ${playlists}" method="post" th:action="@{/playlists/delete}">
+          <div class="playlist-card">
+            <span th:text="${playlist.getName()}">Название плейлиста</span>
+            <div class="playlist-buttons">
+              <button type="submit" class="view-button" formaction="/playlists/{id}/view" th:formaction="'/playlists/' + ${playlist.getPlaylistId()} + '/view'">
+                Просмотреть
+              </button>
+              <input type="hidden" name="id" th:value="${playlist.getPlaylistId()}">
+              <button type="submit" class="delete-button">Удалить</button>
+            </div>
           </div>
-        </div>
-        <div class="playlist-card">
-          <h4>Плейлист 2</h4>
-          <div class="playlist-buttons">
-            <button class="edit-button">Редактировать</button>
-            <button class="delete-button">Удалить</button>
-          </div>
-        </div>
+        </form>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <section class="playlist-videos-section" th:if="${selectedPlaylist != null}">
+      <h2 th:text="'Видео в плейлисте: ' + ${selectedPlaylist.getName()}">Название плейлиста</h2>
+      <table class="playlist-videos-table">
+        <thead>
+        <tr>
+          <th>Миниатюра</th>
+          <th>Название видео</th>
+          <th>Действие</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="playlistVideo : ${selectedPlaylist.getVideos()}">
+          <td>
+            <img th:src="${playlistVideo.getVideo().getImagePath()}" alt="Миниатюра" class="thumbnail">
+          </td>
+          <td th:text="${playlistVideo.getVideo().getTitle()}">Название видео</td>
+          <td>
+            <a th:href="@{/video/{id}(id=${playlistVideo.getVideo().getVideoId()})}" class="view-button">Смотреть</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
 </main>
 
 <div th:replace="fragments/footer.html"></div>
+
 </body>
 </html>
