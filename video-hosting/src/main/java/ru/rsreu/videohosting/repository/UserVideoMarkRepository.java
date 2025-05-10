@@ -16,10 +16,12 @@ public interface UserVideoMarkRepository extends JpaRepository<UserVideoMark, Us
     JOIN uvm.user u
     JOIN u.roleAssignments ra
     JOIN uvm.video v
+    JOIN VideoClass vc on v.videoId = vc.video.videoId
+    JOIN MultimediaClass mc on mc.multimediaClassId = vc.videoMultimediaClass.multimediaClassId
     WHERE uvm.video = :video
       AND uvm.mark = :mark
       AND ra.role IN :roles
-      AND ra.multimediaClass IN v.multimediaClasses
+      AND ra.multimediaClass.multimediaClassId IN mc.multimediaClassId
 """) // DEBUG DEBUG DEBUG!!!
     Long countByVideoAndMarkAndUserRoles(
             @Param("video") Video video,

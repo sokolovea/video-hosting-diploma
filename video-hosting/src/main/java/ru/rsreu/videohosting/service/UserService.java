@@ -50,6 +50,7 @@ public class UserService {
         user.setTelephone(dto.getTelephone());
         user.setCreatedAt(LocalDateTime.now());
         user.setImagePath(dto.getImagePath().toString());
+        user.setIsAdmin(false);
 
         if (!dto.getImagePath().isEmpty()) {
             String filename = storageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);

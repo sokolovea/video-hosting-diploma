@@ -102,7 +102,7 @@
                 <div class="form-group">
                     <label for="categories">Категории</label>
                     <select id="categories" name="categories" multiple size="5" required>
-                        <option th:each="class : ${multimediaClasses}" th:value="${class}" th:text="${class}"></option>
+                        <option th:each="eachClass : ${multimediaClasses}" th:value="${eachClass}" th:text="${eachClass}"></option>
                     </select>
                 </div>
                 <button class="submit-button" type="submit">Загрузить</button>

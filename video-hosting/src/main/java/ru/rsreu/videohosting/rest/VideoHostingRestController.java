@@ -133,7 +133,7 @@ public class VideoHostingRestController {
         comment.setIsModified(false);
 
         commentRepository.save(comment);
-        return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+        return ResponseEntity.status(HttpStatus.CREATED).body("{}");
     }
 
     @PostMapping("/{videoId}/comment/{commentId}/like")

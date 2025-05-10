@@ -28,7 +28,7 @@ public class JdbcRatingDao {
                 join "user" on 	"video".author_id = "user".user_id
                 join "mark_type" on "mark_type".mark_id = "user_video_mark".mark
                 join "video_class" on "video_class".video_id = "video".video_id
-                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".class_id
+                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".multimedia_class_id
             where "user".user_id = ? and "mark_type"."name" = ? and "multimedia_class".multimedia_class_name = ?""";
 
     private final String likesDislikesUserByCommentsCount = """
@@ -39,7 +39,7 @@ public class JdbcRatingDao {
             	join "mark_type" on "mark_type".mark_id = "user_comment_mark".mark
             	join "video" on "comment".video_id = "video".video_id
             	join "video_class" on "video_class".video_id = "video".video_id
-                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".class_id
+                join "multimedia_class" on "multimedia_class".multimedia_class_id = "video_class".multimedia_class_id
             where "user".user_id = ? and "mark_type"."name" = ? and "multimedia_class".multimedia_class_name = ?""";
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;

@@ -74,8 +74,8 @@ public class MVCVideoHostingController {
 
     @GetMapping("/upload_video")
     public String uploadVideo(Model model) {
-        List<String> classes = multimediaClassRepository.getAllMultimediaClassNames();
-        model.addAttribute("classes", classes);
+        List<String> multimediaClasses = multimediaClassRepository.getAllMultimediaClassNames();
+        model.addAttribute("multimediaClasses", multimediaClasses);
         return "upload_video";
     }
 

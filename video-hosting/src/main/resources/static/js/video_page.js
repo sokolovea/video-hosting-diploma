@@ -278,16 +278,20 @@ document.addEventListener('DOMContentLoaded', function () {
 document.addEventListener('DOMContentLoaded', () => {
     const likeButton = document.getElementById('likeButton');
 
+    const likeId = parseInt(document.querySelector('meta[name="_like_id"]').content, 10);
+
     likeButton.addEventListener('click', () => {
-        onVideoMark(1); // DEBUG
+        onVideoMark(likeId); // DEBUG
     });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     const likeButton = document.getElementById('dislikeButton');
 
+    const dislikeId = parseInt(document.querySelector('meta[name="_dislike_id"]').content, 10);
+
     likeButton.addEventListener('click', () => {
-        onVideoMark(2); // DEBUG
+        onVideoMark(dislikeId); // DEBUG
     });
 });
 

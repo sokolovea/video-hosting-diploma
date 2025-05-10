@@ -52,5 +52,9 @@ public class Video implements Serializable {
         return '/' + videoPath;
     }
 
+    public double getRatingPercents() {
+        return 90;
+    }
+
 }
 
