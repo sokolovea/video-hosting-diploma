@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Страница управления плейлистами">
+  <meta th:name="_csrf" th:content="${_csrf.token}"/>
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title>Мои плейлисты</title>
-  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link rel="stylesheet" href="/css/styles.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,19 +18,15 @@
       margin: 20px auto;
     }
 
-    .playlists-section h2, .playlist-videos-section h2 {
+    h2 {
       text-align: center;
       margin-bottom: 20px;
     }
 
-    .create-playlist {
+    .form-inline {
       display: flex;
-      justify-content: center;
       gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .playlist-list {
+      justify-content: center;
       margin-bottom: 20px;
     }
 
@@ -50,9 +48,9 @@
 
     .playlist-buttons button {
       padding: 5px 10px;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
+      border-radius: 5px;
+      border: none;
     }
 
     .view-button {
@@ -65,26 +63,15 @@
       color: white;
     }
 
-    .playlist-videos {
-      margin: 0;
-      padding: 0;
-      list-style: none;
+    .rename-button {
+      background-color: #ffc107;
+      color: white;
     }
 
-    .playlist-videos li {
-      margin-bottom: 10px;
-    }
-
-    .thumbnail {
-      max-width: 100px;
-      margin-right: 10px;
-      vertical-align: middle;
-    }
     .playlist-videos-table {
       width: 100%;
       border-collapse: collapse;
       margin: 20px 0;
-      text-align: left;
     }
 
     .playlist-videos-table th, .playlist-videos-table td {
@@ -96,71 +83,179 @@
       background-color: #f2f2f2;
     }
 
-    .thumbnail {
-      max-width: 100px;
-      height: auto;
-      border-radius: 5px;
-    }
-
   </style>
 </head>
 <body>
 
-<div th:replace="fragments/header.html"></div>
+<div class="container">
+  <section>
+    <h2>Управление плейлистами</h2>
 
-<main>
-  <div class="container">
-    <section class="playlists-section">
-      <h2>Управление плейлистами</h2>
-      <form class="create-playlist" method="post" th:action="@{/playlists/create}">
-        <input type="text" name="name" placeholder="Введите название плейлиста" required>
-        <button type="submit">Создать</button>
-      </form>
+    <!-- Форма создания плейлиста -->
+    <div class="form-inline" style="display: flex; align-items: center;">
+      <label for="newPlaylistName">Введите название плейлиста</label><input type="text" id="newPlaylistName" placeholder="Название плейлиста" required>
+      <button onclick="createPlaylist()">Создать</button>
+    </div>
 
-      <div class="playlist-list">
-        <form th:each="playlist : ${playlists}" method="post" th:action="@{/playlists/delete}">
-          <div class="playlist-card">
-            <span th:text="${playlist.getName()}">Название плейлиста</span>
-            <div class="playlist-buttons">
-              <button type="submit" class="view-button" formaction="/playlists/{id}/view" th:formaction="'/playlists/' + ${playlist.getPlaylistId()} + '/view'">
-                Просмотреть
-              </button>
-              <input type="hidden" name="id" th:value="${playlist.getPlaylistId()}">
-              <button type="submit" class="delete-button">Удалить</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </section>
+    <!-- Список плейлистов -->
+    <div id="playlistContainer"></div>
+  </section>
 
-    <section class="playlist-videos-section" th:if="${selectedPlaylist != null}">
-      <h2 th:text="'Видео в плейлисте: ' + ${selectedPlaylist.getName()}">Название плейлиста</h2>
-      <table class="playlist-videos-table">
-        <thead>
-        <tr>
-          <th>Миниатюра</th>
-          <th>Название видео</th>
-          <th>Действие</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="playlistVideo : ${selectedPlaylist.getVideos()}">
-          <td>
-            <img th:src="${playlistVideo.getVideo().getImagePath()}" alt="Миниатюра" class="thumbnail">
-          </td>
-          <td th:text="${playlistVideo.getVideo().getTitle()}">Название видео</td>
-          <td>
-            <a th:href="@{/video/{id}(id=${playlistVideo.getVideo().getVideoId()})}" class="view-button">Смотреть</a>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- Список видео в плейлисте -->
+  <section id="playlistVideosSection" style="display: none;">
+    <h2 id="playlistTitle">Видео в плейлисте</h2>
 
-  </div>
-</main>
+    <!-- Таблица видео -->
+    <table class="playlist-videos-table">
+      <thead>
+      <tr>
+        <th>Миниатюра</th>
+        <th>Название видео</th>
+        <th>Действие</th>
+      </tr>
+      </thead>
+      <tbody id="videoList"></tbody>
+    </table>
+  </section>
+</div>
 
-<div th:replace="fragments/footer.html"></div>
+<script>
+  const apiUrl = '/api/playlists';
+
+  async function fetchPlaylists() {
+    const response = await fetch(apiUrl);
+    const playlists = await response.json();
+
+    const container = document.getElementById('playlistContainer');
+    container.innerHTML = '';
+
+    playlists.forEach(playlist => {
+      const card = document.createElement('div');
+      card.classList.add('playlist-card');
+      card.innerHTML = `
+        <span>${playlist.name}</span>
+        <div class="playlist-buttons">
+          <button class="view-button" onclick="viewPlaylist(${playlist.id})">Просмотреть</button>
+          <button class="rename-button" onclick="renamePlaylist(${playlist.id})">Переименовать</button>
+          <button class="delete-button" onclick="deletePlaylist(${playlist.id})">Удалить</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  async function createPlaylist() {
+    const name = document.getElementById('newPlaylistName').value;
+
+    if (name.trim() === '') {
+      alert('Введите название плейлиста');
+      return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+    const answer = await fetch(apiUrl + '/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken},
+      body: JSON.stringify({ title: name })
+    });
+
+    if (answer.status === 409) {
+      alert('Плейлист с заданным именем уже существует!')
+    }
+
+    document.getElementById('newPlaylistName').value = '';
+
+    await fetchPlaylists();
+  }
+
+  async function renamePlaylist(id) {
+    const newName = prompt('Введите новое название плейлиста');
+    if (!newName) return;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+    const answer = await fetch(apiUrl + '/rename', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken},
+      body: JSON.stringify({playlistId: id, newPlaylistName: newName})
+    });
+
+    if (answer.status === 409) {
+      alert('Плейлист с заданным именем уже существует!')
+    }
+
+    await fetchPlaylists();
+  }
+
+  async function deletePlaylist(id) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    await fetch(apiUrl + '/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken},
+      body: JSON.stringify({ playlistId: id })
+    });
+
+    await fetchPlaylists();
+  }
+
+  async function viewPlaylist(id) {
+    const response = await fetch(apiUrl + `/${id}/videos`);
+    const playlist = await response.json();
+
+    document.getElementById('playlistTitle').textContent = `Видео в плейлисте: ${playlist.name}`;
+    const videoList = document.getElementById('videoList');
+    videoList.innerHTML = '';
+
+    playlist.videos.forEach(video => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><img src="${video.imagePath}" class="thumbnail"></td>
+        <td><a href="/video/${video.id}">${video.title}</a></td>
+        <td>
+          <button class="delete-button" onclick="removeVideoFromPlaylist(${id}, ${video.id})">Удалить</button>
+        </td>
+      `;
+      videoList.appendChild(row);
+    });
+
+    document.getElementById('playlistVideosSection').style.display = 'block';
+  }
+
+  async function addVideoToPlaylist() {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const playlistId = document.getElementById('playlistTitle').dataset.id;
+    const videoId = document.getElementById('videoIdInput').value;
+
+    if (!videoId.trim()) {
+      alert('Введите ID видео');
+      return;
+    }
+
+    await fetch(apiUrl + '/add-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+      body: JSON.stringify({ playlistId: playlistId, videoId: videoId })
+    });
+
+    document.getElementById('videoIdInput').value = '';
+    viewPlaylist(playlistId);
+  }
+
+  async function removeVideoFromPlaylist(playlistId, videoId) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    await fetch(apiUrl + '/remove-video', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+      body: JSON.stringify({ playlistId: playlistId, videoId: videoId  })
+    });
+
+    viewPlaylist(playlistId);
+  }
+
+  // Инициализация
+  fetchPlaylists();
+</script>
 
 </body>
 </html>

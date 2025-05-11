@@ -295,4 +295,99 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+document.addEventListener('DOMContentLoaded', async () => {
+    const dropdownButton = document.querySelector('.dropdown-button');
+    const dropdownContent = document.getElementById('playlistDropdown');
+    const userPlaylistsList = document.getElementById('userPlaylists');
+    const videoId = document.querySelector('meta[name="_video_id"]').content;
+
+    // Открытие/закрытие меню
+    dropdownButton.addEventListener('click', () => {
+        if (playlistsResponse === undefined || playlistsResponse === null || playlistsResponse.status === 401) {
+            showLoginPrompt();
+            return;
+        }
+        dropdownContent.style.display = dropdownContent.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Получение плейлистов пользователя
+    const playlistsResponse = await fetch('/api/playlists', { method: 'GET' });
+
+    if (playlistsResponse.status !== 200) {
+        return;
+    }
+    const playlists = await playlistsResponse.json();
+
+    // Получение списка плейлистов, в которых уже есть это видео
+    const videoPlaylistsResponse = await fetch(`/api/video/${videoId}/playlists`, { method: 'GET' });
+    const videoPlaylists = await videoPlaylistsResponse.json();
+    const videoPlaylistIds = new Set(videoPlaylists.map(p => p.id));
+
+    if (playlists.length === 0) {
+        const emptyMessage = document.createElement('li');
+        emptyMessage.classList.add('empty-message');
+
+        const link = document.createElement('a');
+        link.textContent = 'У вас еще нет плейлистов. Создайте первый, чтобы добавлять в него видео.';
+        link.href = '/playlist'; // Устанавливаем ссылку на страницу создания плейлистов
+        link.style.textDecoration = 'none'; // Опционально: убираем подчеркивание
+        link.style.color = 'inherit'; // Опционально: делаем ссылку визуально схожей с текстом
+
+        emptyMessage.appendChild(link);
+        userPlaylistsList.appendChild(emptyMessage);
+    } else {
+        // Отображение списка плейлистов
+        playlists.forEach(playlist => {
+            const li = document.createElement('li');
+            li.textContent = playlist.name;
+
+            // Отметить плейлисты, где уже есть это видео
+            if (videoPlaylistIds.has(playlist.id)) {
+                li.classList.add('selected'); // Добавляем класс для выделения
+                li.innerHTML = `&#10003; ${playlist.name}`; // Галочка перед именем
+            }
+
+            li.addEventListener('click', async () => {
+                if (videoPlaylistIds.has(playlist.id)) {
+                    // Удалить видео из плейлиста
+                    await removeVideoFromPlaylist(playlist.id, videoId);
+                    videoPlaylistIds.delete(playlist.id);
+                    li.classList.remove('selected');
+                    li.textContent = playlist.name;
+                } else {
+                    // Добавить видео в плейлист
+                    await addVideoToPlaylist(playlist.id, videoId);
+                    videoPlaylistIds.add(playlist.id);
+                    li.classList.add('selected');
+                    li.innerHTML = `&#10003; ${playlist.name}`;
+                }
+            });
+
+            userPlaylistsList.appendChild(li);
+        });
+    }
+});
+
+// Функция добавления видео в плейлист
+async function addVideoToPlaylist(playlistId, videoId) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    await fetch(`/api/playlists/add-video`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({ playlistId: playlistId, videoId: videoId })
+    });
+}
+
+// Функция удаления видео из плейлиста
+async function removeVideoFromPlaylist(playlistId, videoId) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    await fetch(`/api/playlists/remove-video`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+        body: JSON.stringify({playlistId: playlistId, videoId: videoId })
+    });
+}
+
+
+
 window.toggleReplyForm = toggleReplyForm;

@@ -12,6 +12,8 @@ import ru.rsreu.videohosting.dto.CommentRequestDTO;
 import ru.rsreu.videohosting.dto.CommentResponseDTO;
 import ru.rsreu.videohosting.dto.MarkStatisticsDTO;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
+import ru.rsreu.videohosting.dto.playlist.PlayListVideoDto;
+import ru.rsreu.videohosting.dto.playlist.PlaylistJsonDto;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.StorageService;
@@ -40,6 +42,8 @@ public class VideoHostingRestController {
     private final VideoService videoService;
     private final UserVideoMarkRepository userVideoMarkRepository;
     private final RoleRepository roleRepository;
+    private final PlaylistVideoRepository playlistVideoRepository;
+    private final PlaylistRepository playlistRepository;
 
     public VideoHostingRestController(@Autowired UserRepository userRepository,
                                       @Autowired MultimediaClassRepository multimediaClassRepository,
@@ -50,7 +54,9 @@ public class VideoHostingRestController {
                                       @Autowired StorageService storageService,
                                       @Autowired VideoService videoService,
                                       @Autowired UserVideoMarkRepository userVideoMarkRepository,
-                                      @Autowired RoleRepository roleRepository) {
+                                      @Autowired RoleRepository roleRepository,
+                                      @Autowired PlaylistVideoRepository playlistVideoRepository,
+                                      @Autowired PlaylistRepository playlistRepository) {
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
@@ -61,6 +67,8 @@ public class VideoHostingRestController {
         this.videoService = videoService;
         this.userVideoMarkRepository = userVideoMarkRepository;
         this.roleRepository = roleRepository;
+        this.playlistRepository = playlistRepository;
+        this.playlistVideoRepository = playlistVideoRepository;
     }
 
     @PostMapping("/{videoId}/mark")
@@ -293,5 +301,22 @@ public class VideoHostingRestController {
 //                        (oldValue, newValue) -> oldValue,     // Слияние дубликатов (не нужно в этом случае)
 //                        TreeMap::new                          // Указываем, что результат должен быть TreeMap
 //                ));
+    }
+
+    @GetMapping("/{videoId}/playlists")
+    public ResponseEntity<?> getPlaylistsByVideo(@PathVariable Long videoId, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not logged in");
+        }
+        User user = userRepository.findByLogin(principal.getName()).get();
+        List<Playlist> playlists = playlistVideoRepository.findPlaylistsByVideoIdAndUser(videoId, user);
+        List<PlaylistJsonDto> playlistsJsonDto = new ArrayList<>();
+        for (Playlist playlist : playlists) {
+            PlaylistJsonDto playlistJsonDto = new PlaylistJsonDto();
+            playlistJsonDto.setId(playlist.getPlaylistId());
+            playlistJsonDto.setName(playlist.getName());
+            playlistsJsonDto.add(playlistJsonDto);
+        }
+        return ResponseEntity.ok(playlistsJsonDto);
     }
 }

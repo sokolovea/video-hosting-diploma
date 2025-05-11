@@ -36,7 +36,7 @@ public class VideoService {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
         if (optionalVideo.isPresent()) {
             LocalDateTime lastViewTime = null;
-            if (userRepository.findById(userId).isPresent()) {
+            if (userId !=null && userRepository.findById(userId).isPresent()) {
                 lastViewTime = videoViewsRepository.findLastViewTimeByVideoAndUserId(optionalVideo.get().getVideoId(), userId);
             } else {
                 lastViewTime = videoViewsRepository.findLastViewTimeByVideoAndIpAddress(optionalVideo.get().getVideoId(), viewerId);

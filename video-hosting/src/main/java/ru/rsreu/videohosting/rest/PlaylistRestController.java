@@ -4,13 +4,17 @@ package ru.rsreu.videohosting.rest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.rsreu.videohosting.dto.playlist.PlayListDeleteDto;
 import ru.rsreu.videohosting.dto.playlist.PlayListCreateDto;
 import ru.rsreu.videohosting.dto.playlist.PlayListVideoDto;
+import ru.rsreu.videohosting.dto.playlist.PlaylistRenameDto;
 import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.PlaylistVideo;
 import ru.rsreu.videohosting.entity.User;
@@ -21,10 +25,11 @@ import ru.rsreu.videohosting.service.VideoService;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(path = "/api/playlist", produces = "application/json")
+@RequestMapping(path = "/api/playlists", produces = "application/json")
 //@CrossOrigin(origins = {"http://localhost:8082"}) // DEBUG
 @CrossOrigin(origins = "*")
 public class PlaylistRestController {
@@ -53,7 +58,8 @@ public class PlaylistRestController {
                                   @Autowired VideoService videoService,
                                   @Autowired UserVideoMarkRepository userVideoMarkRepository,
                                   @Autowired SubscriptionRepository subscriptionRepository,
-                                  @Autowired PlaylistRepository playlistRepository, PlaylistVideoRepository playlistVideoRepository) {
+                                  @Autowired PlaylistRepository playlistRepository,
+                                  @Autowired PlaylistVideoRepository playlistVideoRepository) {
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
@@ -70,7 +76,7 @@ public class PlaylistRestController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createPlaylist(
-            @RequestBody PlayListCreateDto playlistCreateDto,
+            @Validated @RequestBody PlayListCreateDto playlistCreateDto,
             Principal principal
     ) {
         if (principal == null) {
@@ -87,9 +93,9 @@ public class PlaylistRestController {
         return ResponseEntity.ok(Map.of("id", createdPlaylistId));
     }
 
-    @PostMapping("/delete")
+    @DeleteMapping("/delete")
     public ResponseEntity<?> deletePlaylist(
-            @RequestBody PlayListDeleteDto playlistDeleteDto,
+            @Validated @RequestBody PlayListDeleteDto playlistDeleteDto,
             Principal principal
     ) {
         if (principal == null) {
@@ -109,7 +115,7 @@ public class PlaylistRestController {
 
     @PostMapping("/add-video")
     public ResponseEntity<?> addVideoToPlaylist(
-            @RequestBody PlayListVideoDto playListVideoDto,
+            @Validated @RequestBody PlayListVideoDto playListVideoDto,
             Principal principal
     ) {
         if (principal == null) {
@@ -136,14 +142,15 @@ public class PlaylistRestController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Video already in playlist");
         }
 
-        playlistVideoRepository.save(new PlaylistVideo(null, playlist, video));
+        playlistVideoRepository.save(new PlaylistVideo(playlist, video));
 
         return ResponseEntity.ok(Map.of("message", "Video added to playlist"));
     }
 
-    @PostMapping("/remove-video")
+    @DeleteMapping("/remove-video")
+    @Transactional
     public ResponseEntity<?> removeVideoFromPlaylist(
-            @RequestBody PlayListVideoDto playListVideoDto,
+            @Validated @RequestBody PlayListVideoDto playListVideoDto,
             Principal principal
     ) {
         if (principal == null) {
@@ -174,6 +181,94 @@ public class PlaylistRestController {
 
         return ResponseEntity.ok(Map.of("message", "Video removed from playlist"));
     }
+
+    @PutMapping("/rename")
+    public ResponseEntity<?> renamePlaylist(
+            @Validated @RequestBody PlaylistRenameDto playlistRenameDto,
+            Principal principal
+    ) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not logged in");
+        }
+
+        User user = userRepository.findByLogin(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Long playlistId = playlistRenameDto.getPlaylistId();
+        String newPlaylistName = playlistRenameDto.getNewPlaylistName();
+
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Playlist not found"));
+
+        if (!playlist.getUser().equals(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Playlist does not belong to user");
+        }
+
+        if (playlistRepository.findPlaylistNamesByUser(user).contains(newPlaylistName)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Playlist name already exists");
+        }
+
+        playlist.setName(newPlaylistName);
+        playlistRepository.save(playlist);
+
+        return ResponseEntity.ok(Map.of("message", "Playlist renamed successfully"));
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getPlaylists(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not logged in");
+        }
+
+        User user = userRepository.findByLogin(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        List<Playlist> playlists = playlistRepository.findByUser(user);
+
+        List<Map<String, Object>> response = playlists.stream()
+                .map(playlist -> Map.<String, Object>of(
+                        "id", playlist.getPlaylistId(),
+                        "name", playlist.getName()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{playlistId}/videos")
+    public ResponseEntity<?> getSelectedPlaylistVideos(
+            @PathVariable("playlistId") Long playlistId, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You are not logged in");
+        }
+
+        User user = userRepository.findByLogin(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Playlist not found"));
+
+        if (!playlist.getUser().equals(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Playlist does not belong to user");
+        }
+
+        List<Map<String, Object>> videosInPlaylist = playlistVideoRepository.findByPlaylist(playlistId).stream()
+                .map(playlistVideo -> Map.of(
+                        "id", playlistVideo.getVideoId(),
+                        "title", (Object) playlistVideo.getTitle(),
+                        "imagePath", playlistVideo.getImagePath() // Adjust field names as needed
+                ))
+                .toList();
+
+        Map<String, Object> response = Map.of(
+                "id", playlist.getPlaylistId(),
+                "name", playlist.getName(),
+                "videos", videosInPlaylist
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 
 
 }

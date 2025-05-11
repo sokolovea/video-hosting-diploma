@@ -6,7 +6,6 @@ import org.springframework.data.repository.query.Param;
 import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
-import ru.rsreu.videohosting.entity.VideoViews;
 
 import java.util.List;
 

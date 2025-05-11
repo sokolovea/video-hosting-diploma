@@ -67,7 +67,7 @@ alter table public.role
 create table public.playlist
 (
     playlist_id bigint generated always as identity primary key,
-    name        varchar(255),
+    name        varchar(255) not null,
     user_id     bigint references public."user",
     video_id    bigint references public.video,
     updated_at  timestamp with time zone default now()

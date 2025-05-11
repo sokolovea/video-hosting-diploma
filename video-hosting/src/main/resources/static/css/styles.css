@@ -318,11 +318,18 @@ button:hover {
 }
 
 .thumbnail {
-    width: 50px;
+    width: 125px;
     height: auto;
     margin-right: 0.5rem;
     vertical-align: middle;
 }
+
+/*.thumbnail-playlist {*/
+/*    width: 100px;*/
+/*    height: auto;*/
+/*    margin-right: 0.5rem;*/
+/*    vertical-align: middle;*/
+/*}*/
 
 .view-again-btn {
     padding: 0.5rem 1rem;
@@ -733,5 +740,58 @@ button:hover {
     border-radius: 50%;
 }
 
+.playlist-dropdown {
+    position: relative;
+    display: inline-block;
+}
 
+.dropdown-button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    position: absolute;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 10;
+    min-width: 200px;
+}
+
+.dropdown-content ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dropdown-content li {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.dropdown-content li:hover {
+    background-color: #f0f0f0;
+}
+
+.empty-message {
+    color: gray;
+    font-style: italic;
+    text-align: center;
+    padding: 10px;
+}
+
+.empty-message a {
+    color: #007bff; /* Синий цвет ссылки */
+    text-decoration: underline;
+}
+
+.empty-message a:hover {
+    color: #0056b3; /* Более тёмный синий при наведении */
+}
 

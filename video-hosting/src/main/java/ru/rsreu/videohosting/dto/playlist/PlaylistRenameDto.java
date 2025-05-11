@@ -1,6 +1,5 @@
 package ru.rsreu.videohosting.dto.playlist;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,10 +11,9 @@ import javax.validation.constraints.NotNull;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PlayListVideoDto {
+public class PlaylistRenameDto {
     @NotNull
     private Long playlistId;
-
     @NotNull
-    private Long videoId;
+    private String newPlaylistName;
 }

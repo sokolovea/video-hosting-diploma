@@ -63,6 +63,14 @@
                         <button class="subscribe-button">Я - автор</button>
                     </div>
 
+                    <div class="playlist-dropdown">
+                        <button class="dropdown-button">Добавить в плейлист</button>
+                        <div class="dropdown-content" id="playlistDropdown" style="display: none;">
+                            <ul id="userPlaylists"></ul>
+                        </div>
+                    </div>
+
+
                 </div>
 
                 <div class="video-description" th:text="${video.description}">
