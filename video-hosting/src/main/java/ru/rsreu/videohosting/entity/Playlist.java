@@ -30,7 +30,7 @@ public class Playlist implements Serializable {
 
     @OneToMany(mappedBy = "playlist", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<PlaylistVideo> videos = new HashSet<>();
+    private Set<PlaylistVideo> playlistVideos = new HashSet<>();
 
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
