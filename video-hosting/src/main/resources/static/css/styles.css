@@ -59,43 +59,120 @@ nav ul li a:hover {
 }
 
 /* Верхний блок с ссылками "Личный кабинет" и "Выход" */
-.header-right a {
-    color: white;
-    text-decoration: none;
-    margin-left: 20px;
-}
-
-.header-right a:hover {
-    text-decoration: underline;
-}
-
-/* Поисковая строка */
-.search-container {
+/* Общие настройки */
+.header-right {
     display: flex;
-    justify-content: center;
-    margin-top: 20px;
+    align-items: center;
+    gap: 20px;
+    justify-content: flex-end;
+    background-color: #333;
+    padding: 10px 20px;
 }
 
-.search-container input {
-    width: 300px;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-}
-
-.search-container button {
-    padding: 10px;
-    background-color: #4CAF50;
+.header-right a,
+.header-right button {
+    text-decoration: none;
     color: white;
+    font-size: 16px;
+    padding: 8px 12px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin-left: 10px;
 }
 
-.search-container button:hover {
+.header-right a:hover,
+.header-right button:hover {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Поисковая строка */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: auto;
+}
+
+.search-form input {
+    width: 250px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.search-form button {
+    background-color: #4CAF50;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.search-form button:hover {
     background-color: #45a049;
 }
+
+.search-button img {
+    width: 16px;
+    height: 16px;
+}
+
+/* Блок авторизации */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-action-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff; /* Синий фон */
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px; /* Унифицированный размер текста */
+    line-height: 1; /* Синхронизация высоты строк */
+}
+
+.user-action-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Для админки */
+.admin-link a {
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.admin-link a:hover {
+    color: #FFC107;
+}
+
+/* Блок для гостей */
+.guest-menu {
+    display: flex;
+    gap: 10px;
+}
+
+.auth-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.auth-btn:hover {
+    background-color: #ddd;
+}
+
 
 /* Основной контент */
 main {
@@ -208,10 +285,9 @@ footer {
     color: white;
     text-align: center;
     padding: 20px;
-    margin-top: 40px;
+    width: 100%;
 }
 
-/* Пример стилей для регистрации и профиля */
 
 body {
     font-family: Arial, sans-serif;
@@ -237,6 +313,35 @@ h2 {
 
 .registration-section, .profile-section {
     margin: 20px 0;
+    /*max-width: 400px; !* Установите максимальную ширину формы *!*/
+    flex-grow: 1; /* Заполняет оставшееся пространство */
+    align-content: center;
+}
+
+/* Поля ввода */
+.registration-section .form-group input {
+    width: 100%; /* Поля будут занимать ширину контейнера */
+    max-width: 100%; /* Ограничиваем растяжение */
+    padding: 10px; /* Увеличиваем отступы */
+    border: 1px solid #ccc; /* Рамка вокруг полей */
+    border-radius: 5px; /* Закругленные углы */
+    box-sizing: border-box; /* Учитываем padding в ширине */
+}
+
+/* Кнопка входа */
+.registration-section form button {
+    max-width: 150px; /* Кнопка занимает ширину контейнера */
+    padding: 10px; /* Увеличиваем отступы */
+    background-color: #4CAF50; /* Цвет кнопки */
+    color: white; /* Цвет текста */
+    border: none; /* Убираем рамку */
+    border-radius: 5px; /* Закругленные углы */
+    cursor: pointer; /* Указатель мыши при наведении */
+    margin-top: 10px; /* Расстояние между кнопкой и полями */
+}
+
+.registration-section form button:hover {
+    background-color: #45a049; /* Цвет при наведении */
 }
 
 form {
@@ -794,4 +899,36 @@ button:hover {
 .empty-message a:hover {
     color: #0056b3; /* Более тёмный синий при наведении */
 }
+
+.auth-container, .user-menu {
+    display: flex; /* Делает элементы внутри контейнера строчными */
+    align-items: center; /* Вертикальное выравнивание */
+    gap: 10px; /* Расстояние между элементами */
+}
+
+.auth-btn, .user-menu a, .user-menu button {
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.auth-btn:hover, .user-menu a:hover, .user-menu button:hover {
+    background-color: #0056b3;
+}
+
+.user-menu form {
+    margin: 0;
+}
+
+.logout-form {
+    display: inline-block;
+    margin: 0; /* Убираем отступы */
+}
+
+
+
 

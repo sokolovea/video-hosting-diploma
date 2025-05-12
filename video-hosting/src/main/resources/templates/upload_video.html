@@ -7,25 +7,12 @@
     <title>Загрузка видео</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
+
         .upload-section {
             margin: 50px auto;
             text-align: center;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+
         h2 {
             margin-bottom: 20px;
             font-size: 24px;
@@ -60,19 +47,7 @@
         .form-group select {
             height: auto;
         }
-        .submit-button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007bff;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .submit-button:hover {
-            background-color: #0056b3;
-        }
+
     </style>
 </head>
 <body>
@@ -105,7 +80,7 @@
                         <option th:each="eachClass : ${multimediaClasses}" th:value="${eachClass}" th:text="${eachClass}"></option>
                     </select>
                 </div>
-                <button class="submit-button" type="submit">Загрузить</button>
+                <button class="submit-button" type="submit" style="max-width: 150px">Загрузить</button>
             </form>
         </div>
     </section>

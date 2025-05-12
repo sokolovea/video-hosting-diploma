@@ -115,7 +115,7 @@ public class MVCVideoHostingController {
         if (optionalUser.isPresent()) {
             video.setAuthor(optionalUser.get());
             videoRepository.save(video);
-            return "redirect:/upload_video?success";
+            return String.format("redirect:/video/%d", video.getVideoId());
         }
         return "redirect:/upload_video?error"; //DEBUG
     }

@@ -5,6 +5,7 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
+<div th:replace="fragments/header.html"></div>
 <div th:if="${param.error}" class="auth-error">
     <p class="validationError">Неверный логин или пароль</p>
 </div>
@@ -23,8 +24,8 @@
             <button type="submit">Войти</button>
         </form>
         <p>Ещё нет аккаунта? <a th:href="@{/register}">Зарегистрироваться</a></p>
-        <p class="validationError">Забыли пароль? <a th:href="@{/register}">Форма восстановления пароля</a></p>
     </div>
 </section>
 </body>
+<div th:replace="fragments/footer.html"></div>
 </html>
