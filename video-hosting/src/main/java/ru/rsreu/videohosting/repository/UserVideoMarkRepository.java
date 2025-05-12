@@ -11,7 +11,7 @@ import java.util.Set;
 public interface UserVideoMarkRepository extends JpaRepository<UserVideoMark, UserVideoMarkId> {
 
     @Query("""
-    SELECT COUNT(uvm)
+    SELECT COUNT(distinct uvm.user)
     FROM UserVideoMark uvm
     JOIN uvm.user u
     JOIN u.roleAssignments ra

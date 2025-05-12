@@ -14,6 +14,8 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findByAuthor(User author);
     List<Video> findByTitleContaining(String title);
 
+    boolean existsByAuthorAndVideoId(User author, Long videoId);
+
     @Query("SELECT count(v) FROM Video v WHERE v.author = :author AND :classificator MEMBER OF v.multimediaClasses")
     Long countAllByAuthorAndHavingClass(@Param("author") User author, @Param("classificator") MultimediaClass classificator);
 }

@@ -4,11 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.dto.VideoSearchDto;
+import ru.rsreu.videohosting.dto.VideoUploadDTO;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.repository.*;
@@ -76,40 +81,137 @@ public class MVCVideoHostingController {
     public String uploadVideo(Model model) {
         List<String> multimediaClasses = multimediaClassRepository.getAllMultimediaClassNames();
         model.addAttribute("multimediaClasses", multimediaClasses);
+        model.addAttribute("video", new VideoUploadDTO());
+        model.addAttribute("formName", "Загрузка видео");
         return "upload_video";
     }
 
+    @GetMapping("/video_edit/{video_id}")
+    public String editVideo(@PathVariable(name = "video_id") Long videoId, Model model) {
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isEmpty()) {
+            return "redirect:/404";
+        }
+        Video video = optionalVideo.get();
+        List<String> multimediaClasses = multimediaClassRepository.getAllMultimediaClassNames();
+        model.addAttribute("multimediaClasses", multimediaClasses);
+        model.addAttribute("video", new VideoUploadDTO(
+                video.getVideoId(),
+                video.getTitle(),
+                video.getDescription(),
+                null,
+                null,
+                new ArrayList<String>()
+        ));
+        model.addAttribute("formName", "Редактирование видео");
+        return "upload_video";
+    }
+
+
     @PostMapping("/upload_video")
-    public String uploadVideo(@RequestParam("title") String title,
-                              @RequestParam("description") String description,
-                              @RequestParam("videoFile") MultipartFile videoFile,
-                              @RequestParam("imageFile") MultipartFile imageFile,
-                              @RequestParam("categories") List<String> classesString,
+    public String uploadVideo(@Validated @ModelAttribute("video") VideoUploadDTO videoUploadDTO,
+                              BindingResult result,
+                              Principal principal,
+                              Model model) {
+
+        if (principal == null) {
+            return "redirect:/404";
+        }
+
+        List<String> multimediaClasses = multimediaClassRepository.getAllMultimediaClassNames();
+        model.addAttribute("multimediaClasses", multimediaClasses);
+
+        Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
+        Video video = new Video();
+
+        if (videoUploadDTO.getVideoId() == null) {
+            model.addAttribute("formName", "Загрузка видео");
+            if (videoUploadDTO.getImageFile() == null || videoUploadDTO.getImageFile().isEmpty()) {
+                result.rejectValue("imageFile", "error.imageFile",  "Изображение должно быть выбрано!");
+            }
+            if (videoUploadDTO.getVideoFile() == null || videoUploadDTO.getVideoFile().isEmpty()) {
+                result.rejectValue("videoFile", "error.videoFile", "Видеодорожка должна быть выбрана!");
+            }
+            if (videoUploadDTO.getClassesString() == null || videoUploadDTO.getClassesString().isEmpty()) {
+                result.rejectValue("classesString", "error.classesString", "Хотя бы одна категория должна быть выбрана");
+            }
+            if (result.hasErrors()) {
+                return "upload_video";
+            }
+        } else {
+            model.addAttribute("formName", "Редактирование видео");
+            if (videoRepository.existsByAuthorAndVideoId(optionalUser.get(), videoUploadDTO.getVideoId())) {
+                video = videoRepository.findById(videoUploadDTO.getVideoId()).get();
+            } else {
+                return "redirect:/upload_video?error"; //DEBUG
+            }
+        }
+
+        String imagePath = null;
+        if (videoUploadDTO.getImageFile() != null && !videoUploadDTO.getImageFile().isEmpty()) {
+            imagePath = this.storageService.store(videoUploadDTO.getImageFile(), ContentMultimediaType.VIDEO_IMAGE);
+        }
+        String videoPath = null;
+        if (videoUploadDTO.getVideoFile() != null && !videoUploadDTO.getVideoFile().isEmpty()) {
+            videoPath = this.storageService.store(videoUploadDTO.getVideoFile(), ContentMultimediaType.VIDEO);
+        }
+
+
+        video.setTitle(videoUploadDTO.getTitle());
+        video.setDescription(videoUploadDTO.getDescription());
+        if (videoPath != null) {
+            video.setVideoPath(videoPath);
+        }
+        if (imagePath != null) {
+            video.setImagePath(imagePath);
+        }
+
+        if (videoUploadDTO.getClassesString() != null && !videoUploadDTO.getClassesString().isEmpty()) {
+            Set<MultimediaClass> multimediaClasses = multimediaClassRepository.findAllByMultimediaClassNameIn(videoUploadDTO.getClassesString());
+            video.setMultimediaClasses(multimediaClasses);
+        }
+
+        if (optionalUser.isPresent()) {
+            video.setAuthor(optionalUser.get());
+            videoRepository.save(video);
+            return String.format("redirect:/video/%d", video.getVideoId());
+        }
+        return "redirect:/upload_video?error"; //DEBUG
+    }
+
+
+    @PostMapping("/video_edit")
+    public String editVideo(@RequestParam("video") VideoUploadDTO videoUploadDTO,
+                              BindingResult result,
                               Principal principal) {
 
         if (principal == null) {
             return "redirect:/404";
         }
 
-        if (videoFile.isEmpty()) {
+        if (result.hasErrors()) {
             return "redirect:/upload_video?error";
         }
 
-        if (imageFile.isEmpty()) {
-            return "redirect:/upload_video?error";
-        }
 
-        String imagePath = this.storageService.store(imageFile, ContentMultimediaType.VIDEO_IMAGE);
-        String videoPath = this.storageService.store(videoFile, ContentMultimediaType.VIDEO);
+        String imagePath = this.storageService.store(videoUploadDTO.getVideoFile(), ContentMultimediaType.VIDEO_IMAGE);
+        String videoPath = this.storageService.store(videoUploadDTO.getImageFile(), ContentMultimediaType.VIDEO);
 
 
         Video video = new Video();
-        video.setTitle(title);
-        video.setDescription(description);
+        video.setTitle(videoUploadDTO.getTitle());
+        video.setDescription(videoUploadDTO.getDescription());
         video.setVideoPath(videoPath);
         video.setImagePath(imagePath);
 
-        Set<MultimediaClass> multimediaClasses = multimediaClassRepository.findAllByMultimediaClassNameIn(classesString);
+        Set<MultimediaClass> multimediaClasses = multimediaClassRepository.
+                findAllByMultimediaClassNameIn(videoUploadDTO.getClassesString());
+
+        if (multimediaClasses.isEmpty()) {
+            result.rejectValue("classesString", "Должен быть выбран хотя бы один класс");
+            return "redirect:/upload_video?error";
+        }
+
         video.setMultimediaClasses(multimediaClasses);
         Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
         if (optionalUser.isPresent()) {
