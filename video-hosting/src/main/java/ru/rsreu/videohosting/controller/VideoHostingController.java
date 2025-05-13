@@ -11,12 +11,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
-import ru.rsreu.videohosting.entity.Playlist;
-import ru.rsreu.videohosting.entity.User;
-import ru.rsreu.videohosting.entity.Video;
-import ru.rsreu.videohosting.entity.VideoViews;
+import ru.rsreu.videohosting.dto.playlist.RatingUserProfileDto;
+import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.UserService;
+import ru.rsreu.videohosting.util.RatingConverter;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -70,7 +69,7 @@ public class VideoHostingController {
     public String profile(Model model, Principal principal) {
         String username = principal.getName();
         User user = userRepository.findByLogin(username).get();
-        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
+        Map<MultimediaClass, Double> mapUserRating = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
         UserProfileDTO profileDto = new UserProfileDTO(
                 user.getLogin(),
                 user.getSurname(),
@@ -82,7 +81,10 @@ public class VideoHostingController {
                 user.getCreatedAt().toLocalDate()
         );
 
+        List<RatingUserProfileDto> listUserRatings = RatingConverter.convertAndSort(mapUserRating);
+
         model.addAttribute("user", profileDto);
+        model.addAttribute("ratings", listUserRatings);
         return "profile";
     }
 

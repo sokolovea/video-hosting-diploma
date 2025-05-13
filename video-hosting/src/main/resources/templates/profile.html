@@ -33,6 +33,27 @@
         .edit-mode button {
             margin-right: 10px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        thead {
+            background-color: #f4f4f4;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -55,9 +76,26 @@
                     <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
                     <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
                     <p><strong>Дата регистрации:</strong> <span th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}"></span></p>
+                    <a th:href="@{/profile/edit}">Редактировать профиль</a>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Категория</th>
+                            <th>Рейтинг</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="rating : ${ratings}">
+                            <td th:text="${rating.categoryName}"></td>
+                            <td th:text="${#numbers.formatDecimal(rating.rating, 1, 2)}"
+                                th:class="${rating.rating >= 1 ? 'positive-rating' : (rating.rating <= -1 ? 'negative-rating' : 'neutral-rating')}">
+                                <span th:if="${rating.rating > 0}">+</span><span th:text="${rating.rating}"></span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <a th:href="@{/profile/edit}">Редактировать профиль</a>
         </div>
     </section>
 </main>

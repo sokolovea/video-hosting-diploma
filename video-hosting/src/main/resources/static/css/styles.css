@@ -929,6 +929,19 @@ button:hover {
     margin: 0; /* Убираем отступы */
 }
 
+.positive-rating {
+    color: green;
+    font-weight: bold;
+}
 
+.negative-rating {
+    color: red;
+    font-weight: bold;
+}
+
+.neutral-rating {
+    color: orange;
+    font-weight: bold;
+}
 
 
