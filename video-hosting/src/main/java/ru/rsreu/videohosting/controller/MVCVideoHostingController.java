@@ -115,11 +115,12 @@ public class MVCVideoHostingController {
                               Model model) {
 
         if (principal == null) {
-            return "redirect:/404";
+            return "redirect:/403";
         }
 
         List<String> multimediaClasses = multimediaClassRepository.getAllMultimediaClassNames();
         model.addAttribute("multimediaClasses", multimediaClasses);
+        model.addAttribute("video", videoUploadDTO);
 
         Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
         Video video = new Video();
@@ -167,8 +168,8 @@ public class MVCVideoHostingController {
         }
 
         if (videoUploadDTO.getClassesString() != null && !videoUploadDTO.getClassesString().isEmpty()) {
-            Set<MultimediaClass> multimediaClasses = multimediaClassRepository.findAllByMultimediaClassNameIn(videoUploadDTO.getClassesString());
-            video.setMultimediaClasses(multimediaClasses);
+            Set<MultimediaClass> multimediaClassesSet = multimediaClassRepository.findAllByMultimediaClassNameIn(videoUploadDTO.getClassesString());
+            video.setMultimediaClasses(multimediaClassesSet);
         }
 
         if (optionalUser.isPresent()) {
