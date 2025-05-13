@@ -148,7 +148,7 @@ public class VideoHostingController {
     public String playlist(Model model, Principal principal) {
         String username = principal.getName();
         User user = userRepository.findByLogin(username).get();
-        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
+//        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses()); //DEBUG
         UserProfileDTO profileDto = new UserProfileDTO(
                 user.getLogin(),
                 user.getSurname(),
@@ -169,4 +169,11 @@ public class VideoHostingController {
         model.addAttribute("selectedPlaylist", new Playlist());
         return "playlist";
     }
+
+//    @GetMapping("/search")
+//    public String searchPage(Model model) {
+//        return "search";
+//    }
+
+
 }

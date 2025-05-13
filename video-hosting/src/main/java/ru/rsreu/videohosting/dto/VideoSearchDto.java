@@ -15,11 +15,11 @@ public class VideoSearchDto {
     private String videoTitle;
     private String videoDescription;
     private String videoThumbnailUrl;
-    private Long videoRatingUsual;
-    private Long videoRatingExperts;
+    private Double videoRatingUsual;
+    private Double videoRatingExperts;
     private Long views;
 
-    public VideoSearchDto(Video video, long ratingUsual, long ratingExperts, long views) {
+    public VideoSearchDto(Video video, Double ratingUsual, Double ratingExperts, long views) {
         this.videoId = video.getVideoId();
         this.videoTitle = video.getTitle();
         this.videoDescription = video.getDescription();

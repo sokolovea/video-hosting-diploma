@@ -3,14 +3,12 @@ package ru.rsreu.videohosting.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.rsreu.videohosting.dto.RatingDto;
-import ru.rsreu.videohosting.entity.MarkType;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
 import ru.rsreu.videohosting.repository.*;
 
 import javax.persistence.EntityNotFoundException;
-import javax.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -84,8 +82,8 @@ public class VideoService {
 //                return likesCount / (double)marksCount * 100;
 //            }
 //        }
-        ratingDto.setRatingExpertPercent(80);
-        ratingDto.setRatingUserPercent(90);
+        ratingDto.setRatingExpert(80.0);
+        ratingDto.setRatingUser(90.0);
         return ratingDto;
     }
 }

@@ -158,15 +158,38 @@ function onVideoMark (markId) {
             if (response.status === 401) {
                 showLoginPrompt();
             }
-            if (response.ok) {
+            else if (response.ok) {
                 return response.json(); // Предполагаем, что сервер возвращает JSON
             }
-            throw new Error('Network response was not ok');
+            else if (response.status === 409) {
+                // Отправляем AJAX-запрос
+                const urlDeleteMark = `/api/video/${videoId}/mark`;
+                fetch(urlDeleteMark, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                }).then(r => {
+                    if (r.ok) {
+                        return r.json();
+                    }
+                    throw new Error('Failed to delete mark');
+                }).then(data => {
+                    // console.log(data);
+                    if (data !== null && data !== undefined) {
+                        document.getElementById('likeCount').textContent = data.likesCount;
+                        document.getElementById('dislikeCount').textContent = data.dislikesCount;
+                    }
+                })
+            }
         })
         .then(data => {
             // console.log(data);
-            document.getElementById('likeCount').textContent = data.likesCount;
-            document.getElementById('dislikeCount').textContent = data.dislikesCount;
+            if (data !== null && data !== undefined) {
+                document.getElementById('likeCount').textContent = data.likesCount;
+                document.getElementById('dislikeCount').textContent = data.dislikesCount;
+            }
         })
         .catch(error => {
             console.error('Error:', error);

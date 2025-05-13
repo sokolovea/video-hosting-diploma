@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,9 +12,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.rsreu.videohosting.dto.RegistrationDTO;
-import ru.rsreu.videohosting.dto.VideoSearchDto;
-import ru.rsreu.videohosting.dto.VideoUploadDTO;
+import ru.rsreu.videohosting.dao.JdbcRatingDao;
+import ru.rsreu.videohosting.dto.*;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.repository.*;
@@ -22,6 +22,7 @@ import ru.rsreu.videohosting.service.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,7 @@ public class MVCVideoHostingController {
     private final CustomWebClientService customWebClientService;
     private final CommentService commentService;
     private final RoleRepository roleRepository;
+    private final JdbcRatingDao jdbcRatingDao;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -59,7 +61,9 @@ public class MVCVideoHostingController {
                                      @Autowired VideoService videoService,
                                      @Autowired CustomWebClientService customWebClientService,
                                      @Autowired CommentService commentService,
-                                     @Autowired SubscriptionRepository subscriptionRepository, RoleRepository roleRepository) {
+                                     @Autowired SubscriptionRepository subscriptionRepository,
+                                     @Autowired RoleRepository roleRepository,
+                                     @Autowired JdbcRatingDao jdbcRatingDao) {
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
@@ -74,6 +78,7 @@ public class MVCVideoHostingController {
         this.commentService = commentService;
         this.subscriptionRepository = subscriptionRepository;
         this.roleRepository = roleRepository;
+        this.jdbcRatingDao = jdbcRatingDao;
     }
 
 
@@ -271,6 +276,8 @@ public class MVCVideoHostingController {
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
+
+            // var a = jdbcRatingDao.getVideoRating(video); //DEBUG
             // Получение всех комментариев для данного видео
             List<Comment> allComments = commentRepository.findByVideo(video);
 
@@ -293,10 +300,10 @@ public class MVCVideoHostingController {
             model.addAttribute("subscribers", subscriptionRepository.countByAuthor(video.getAuthor()));
             model.addAttribute("videoViews", videoViewsRepository.countByVideo(video));
 
-            HashSet<Role> roles = new HashSet<>();
-            roles.add(roleRepository.findByRoleName("USER").get());
-            model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMarkAndUserRoles(video, likeMark, roles));
-            model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMarkAndUserRoles(video, dislikeMark, roles));
+//            HashSet<Role> roles = new HashSet<>();
+//            roles.add(roleRepository.findByRoleName("USER").get());
+            model.addAttribute("videoLikes", videoMarkRepository.countByVideoAndMark(video, likeMark));
+            model.addAttribute("videoDislikes", videoMarkRepository.countByVideoAndMark(video, dislikeMark));
             model.addAttribute("likeId", likeMark.getMarkId());
             model.addAttribute("dislikeId", dislikeMark.getMarkId());
 
@@ -316,19 +323,110 @@ public class MVCVideoHostingController {
         return "video";
     }
 
+    public Map<Video, Long> getVideoViewCounts(List<Video> videos) {
+        List<Object[]> results = videoViewsRepository.countViewsByVideos(videos);
+
+        // Преобразуем в Map
+        return results.stream()
+                .collect(Collectors.toMap(
+                        result -> (Video) result[0], // Ключ — объект Video
+                        result -> (Long) result[1]   // Значение — количество просмотров
+                ));
+    }
+
     @GetMapping("/search")
-    public String search(@RequestParam("query") String query, Model model) {
-        List<Video> videos = videoRepository.findByTitleContaining(query);
-        List<VideoSearchDto> videosDTO= new ArrayList<VideoSearchDto>();
-        for (Video video : videos) {
-            videosDTO.add(new VideoSearchDto(
-                    video,
-                    1, 2, videoViewsRepository.countByVideo(video)
-            ));
+    public String search(
+            @RequestParam("query") String query,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "sortBy", defaultValue = "rating") String sortBy,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            Model model) {
+
+        if (query == null || query.trim().isEmpty()) {
+            model.addAttribute("query", query);
+            model.addAttribute("videos", Collections.emptyList());
+            return "video_search";
         }
+
+        // Получение видео по запросу и фильтрам
+        List<Video> videos = videoRepository.findWithFilters(query, category, startDate, endDate);
+
+        // Сбор просмотров и рейтингов
+        Map<Video, Long> videoViews = getVideoViewCounts(videos);
+        Map<Long, Map<MultimediaClass, RatingDto>> allRatings = videos.stream()
+                .collect(Collectors.toMap(
+                        Video::getVideoId,
+                        jdbcRatingDao::getVideoRating
+                ));
+
+        MultimediaClass multimediaClass = null;
+        if (category != null && !category.trim().isEmpty()) {
+            multimediaClass = multimediaClassRepository.findByMultimediaClassName(category)
+                    .orElse(null);
+        }
+
+        // Подсчет среднего рейтинга или извлечение конкретного
+        Map<Video, RatingDto> aggregatedRatings = new HashMap<>();
+        for (Video video : videos) {
+            Map<MultimediaClass, RatingDto> videoRatings = allRatings.get(video.getVideoId());
+            double userRating = 0;
+            double expertRating = 0;
+
+            if (multimediaClass == null) {
+                // Средний рейтинг по всем категориям
+                for (RatingDto ratingDto : videoRatings.values()) {
+                    if (ratingDto.getRatingUser() != null) {
+                        userRating += ratingDto.getRatingUser();
+                    }
+                    if (ratingDto.getRatingExpert() != null) {
+                        expertRating += ratingDto.getRatingExpert();
+                    }
+                }
+                userRating /= videoRatings.size();
+                expertRating /= videoRatings.size();
+            } else {
+                // Рейтинг только по указанной категории
+                RatingDto ratingDto = videoRatings.get(multimediaClass);
+                if (ratingDto != null) {
+                    if (ratingDto.getRatingUser() != null) {
+                        userRating = ratingDto.getRatingUser();
+                    }
+                    if (ratingDto.getRatingExpert() != null) {
+                        expertRating = ratingDto.getRatingExpert();
+                    }
+                }
+            }
+
+            aggregatedRatings.put(video, new RatingDto(userRating, expertRating));
+        }
+
+        // Сбор DTO и сортировка
+        List<VideoSearchDto> videosDTO = videos.stream()
+                .map(video -> {
+                    RatingDto rating = aggregatedRatings.get(video);
+                    return new VideoSearchDto(
+                            video,
+                            rating.getRatingExpert(),
+                            rating.getRatingUser(),
+                            videoViews.getOrDefault(video, 0L)
+                    );
+                })
+                .sorted(getComparator(sortBy))
+                .toList();
+
+        // Добавление данных в модель
         model.addAttribute("query", query);
         model.addAttribute("videos", videosDTO);
         return "video_search";
+    }
+
+    private Comparator<VideoSearchDto> getComparator(String sortBy) {
+        return switch (sortBy) {
+            case "newest" -> Comparator.comparing(VideoSearchDto::getVideoRatingUsual).reversed(); //DEBUG!!!
+            case "rating" -> Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts).reversed();
+            default -> Comparator.comparing(VideoSearchDto::getVideoId); // По умолчанию
+        };
     }
 
 

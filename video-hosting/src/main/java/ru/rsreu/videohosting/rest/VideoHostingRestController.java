@@ -21,6 +21,7 @@ import ru.rsreu.videohosting.service.VideoService;
 import ru.rsreu.videohosting.util.JacksonUtil;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.transaction.Transactional;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,6 +95,11 @@ public class VideoHostingRestController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Mark not found");
         }
 
+        UserVideoMark oldUserVideoMark = userVideoMarkRepository.findByUserAndVideo(userOptional.get(), videoOptional.get());
+        if (oldUserVideoMark != null && oldUserVideoMark.getMark() == markOptional.get()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Mark always exists");
+        }
+
         UserVideoMark userVideoMark = new UserVideoMark();
         userVideoMark.setUser(userOptional.get());
         userVideoMark.setVideo(videoOptional.get());
@@ -102,15 +108,34 @@ public class VideoHostingRestController {
 
         userVideoMarkRepository.save(userVideoMark);
 
-//        HashSet<Role> roles = new HashSet<>();
-//        roles.add(roleRepository.findByRoleName("USER").get());
-
-
         Long likesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("LIKE").get());
         Long dislikesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("DISLIKE").get());
         return ResponseEntity.status(HttpStatus.CREATED).body(new MarkStatisticsDTO(likesCount, dislikesCount, markOptional.get().getMarkId()));
     }
 
+    @DeleteMapping("/{videoId}/mark")
+    public ResponseEntity<?> addMark(@PathVariable Long videoId,
+                                     Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
+        }
+
+        Optional<Video> videoOptional = videoRepository.findById(videoId);
+        if (videoOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
+        }
+        Optional<User> userOptional = userRepository.findByLogin(principal.getName());
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        UserVideoMark userVideoMark = userVideoMarkRepository.findByUserAndVideo(userOptional.get(), videoOptional.get());
+        userVideoMarkRepository.delete(userVideoMark);
+
+        Long likesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("LIKE").get());
+        Long dislikesCount = userVideoMarkRepository.countByVideoAndMark(videoOptional.get(), markRepository.findByName("DISLIKE").get());
+        return ResponseEntity.status(HttpStatus.OK).body(new MarkStatisticsDTO(likesCount, dislikesCount, -1L));
+    }
 
     @PostMapping("/{videoId}/comment")
     public ResponseEntity<?> addComment(@PathVariable Long videoId,

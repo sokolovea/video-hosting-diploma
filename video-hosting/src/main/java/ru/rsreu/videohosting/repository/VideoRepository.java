@@ -7,10 +7,12 @@ import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
+import ru.rsreu.videohosting.repository.custom.VideoRepositoryCustom;
 
+import java.time.LocalDate;
 import java.util.List;
 
-public interface VideoRepository extends JpaRepository<Video, Long> {
+public interface VideoRepository extends JpaRepository<Video, Long>, VideoRepositoryCustom {
     List<Video> findByAuthor(User author);
     List<Video> findByTitleContaining(String title);
 

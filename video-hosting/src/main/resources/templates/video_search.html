@@ -6,30 +6,73 @@
     <meta name="description" content="RadikTube - результаты поиска">
     <title th:text="'Результаты поиска | RadikTube'"></title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{/css/datepicker.css}">
+    <script th:src="@{/js/datepicker.js}"></script>
     <style>
+        .search-filters {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-filters label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .search-filters select,
+        .search-filters input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .search-filters button {
+            padding: 10px 20px;
+            background-color: #065fd4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-filters button:hover {
+            background-color: #004bb5;
+        }
+
         .search-videos {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
-        .search-videos tr {
-            border-bottom: 1px solid #eee;
-        }
-        .search-videos tr:hover {
-            background-color: #f5f5f5;
-        }
+
+        .search-videos th,
         .search-videos td {
             padding: 12px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .search-videos th {
+            background-color: #f4f4f4;
+        }
+
+        .search-videos td {
             vertical-align: top;
         }
-        .search-query {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .video-title {
+
+        .video-title a {
             font-weight: bold;
             color: #065fd4;
+            text-decoration: none;
+        }
+
+        .video-title a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -40,6 +83,38 @@
 <main>
     <section class="search-section">
         <div class="container">
+            <form class="search-filters" th:action="@{/search}" method="get">
+                <div>
+                    <label for="query">Запрос</label>
+                    <input type="text" id="query" name="query" th:value="${query}" placeholder="Введите запрос...">
+                </div>
+                <div>
+                    <label for="category">Категория</label>
+                    <select id="category" name="category">
+                        <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label for="sortBy">Критерий поиска</label>
+                    <select id="sortBy" name="sortBy">
+                        <option value="rating" th:selected="${sortBy == 'rating'}">Рейтинг</option>
+                        <option value="views" th:selected="${sortBy == 'views'}">Просмотры</option>
+                        <option value="newest" th:selected="${sortBy == 'newest'}">Новизна</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="startDate">Начальная дата</label>
+                    <input type="text" id="startDate" name="startDate" class="datepicker" th:value="${startDate}" placeholder="Выберите дату">
+                </div>
+                <div>
+                    <label for="endDate">Конечная дата</label>
+                    <input type="text" id="endDate" name="endDate" class="datepicker" th:value="${endDate}" placeholder="Выберите дату">
+                </div>
+                <div>
+                    <button type="submit">Искать</button>
+                </div>
+            </form>
+
             <div class="search-query">
                 Результаты поиска по запросу:
                 <span th:text="${query}">Текст запроса</span>
@@ -75,5 +150,18 @@
 
 <!-- Включаем подвал -->
 <div th:replace="fragments/footer :: footer"></div>
+
+<script>
+    // Подключение календарика
+    document.addEventListener('DOMContentLoaded', function() {
+        const datepickers = document.querySelectorAll('.datepicker');
+        datepickers.forEach(datepicker => {
+            new Datepicker(datepicker, {
+                format: 'dd.mm.yyyy',
+                autohide: true
+            });
+        });
+    });
+</script>
 </body>
 </html>

@@ -8,6 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 public class RatingDto {
-    private double ratingUserPercent;
-    private double ratingExpertPercent;
+    private Double ratingUser;
+    private Double ratingExpert;
 }

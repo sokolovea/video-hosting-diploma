@@ -29,6 +29,14 @@ public interface UserVideoMarkRepository extends JpaRepository<UserVideoMark, Us
             @Param("roles") Set<Role> userRoles
     );
     Long countByVideo(Video video);
+
     Long countByVideoAndMark(Video video, MarkType mark);
     Long countByUserAndMark(User user, MarkType mark);
+
+    @Query("SELECT CASE WHEN COUNT(uvm) > 0 THEN true ELSE false END FROM UserVideoMark uvm " +
+            "WHERE uvm.user = :user and uvm.video = :video")
+    boolean existsByUserAndVideo(@Param("user") User user, @Param("video") Video video);
+
+    @Query("SELECT uvm FROM UserVideoMark uvm WHERE uvm.user = :user and uvm.video = :video")
+    UserVideoMark findByUserAndVideo(@Param("user") User user, @Param("video") Video video);
 }
