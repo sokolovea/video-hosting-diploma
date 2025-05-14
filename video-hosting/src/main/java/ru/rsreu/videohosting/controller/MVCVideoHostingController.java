@@ -22,7 +22,9 @@ import ru.rsreu.videohosting.service.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -338,10 +340,17 @@ public class MVCVideoHostingController {
     public String search(
             @RequestParam("query") String query,
             @RequestParam(value = "category", required = false) String category,
-            @RequestParam(value = "sortBy", defaultValue = "rating") String sortBy,
-            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(value = "sortBy", defaultValue = "rating_expert") String sortBy,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate endDate,
             Model model) {
+
+        model.addAttribute("categories", multimediaClassRepository.findAll());
+        model.addAttribute("category", category);
+        model.addAttribute("sortBy", sortBy);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        model.addAttribute("startDate", startDate == null ? null : startDate.format(formatter));
+        model.addAttribute("endDate", endDate == null ? null : endDate.format(formatter));
 
         if (query == null || query.trim().isEmpty()) {
             model.addAttribute("query", query);
@@ -350,7 +359,8 @@ public class MVCVideoHostingController {
         }
 
         // Получение видео по запросу и фильтрам
-        List<Video> videos = videoRepository.findWithFilters(query, category, startDate, endDate);
+        List<Video> videos = videoRepository.findWithFilters(query, category, startDate == null ? null : startDate.atStartOfDay(),
+                endDate == null ? null : endDate.atTime(23, 59, 59));
 
         // Сбор просмотров и рейтингов
         Map<Video, Long> videoViews = getVideoViewCounts(videos);
@@ -370,21 +380,31 @@ public class MVCVideoHostingController {
         Map<Video, RatingDto> aggregatedRatings = new HashMap<>();
         for (Video video : videos) {
             Map<MultimediaClass, RatingDto> videoRatings = allRatings.get(video.getVideoId());
-            double userRating = 0;
-            double expertRating = 0;
+            Double userRating = null;
+            Double expertRating = null;
 
             if (multimediaClass == null) {
                 // Средний рейтинг по всем категориям
                 for (RatingDto ratingDto : videoRatings.values()) {
                     if (ratingDto.getRatingUser() != null) {
+                        if (userRating == null) {
+                            userRating = 0.0;
+                        }
                         userRating += ratingDto.getRatingUser();
                     }
                     if (ratingDto.getRatingExpert() != null) {
+                        if (expertRating == null) {
+                            expertRating = 0.0;
+                        }
                         expertRating += ratingDto.getRatingExpert();
                     }
                 }
-                userRating /= videoRatings.size();
-                expertRating /= videoRatings.size();
+                if (userRating != null) {
+                    userRating /= videoRatings.size();
+                }
+                if (expertRating != null) {
+                    expertRating /= videoRatings.size();
+                }
             } else {
                 // Рейтинг только по указанной категории
                 RatingDto ratingDto = videoRatings.get(multimediaClass);
@@ -398,7 +418,8 @@ public class MVCVideoHostingController {
                 }
             }
 
-            aggregatedRatings.put(video, new RatingDto(userRating, expertRating));
+            aggregatedRatings.put(video, new RatingDto(userRating == null ? -1 : userRating,
+                    expertRating == null ? -1 : expertRating));
         }
 
         // Сбор DTO и сортировка
@@ -409,6 +430,7 @@ public class MVCVideoHostingController {
                             video,
                             rating.getRatingExpert(),
                             rating.getRatingUser(),
+                            video.getCreatedAt(),
                             videoViews.getOrDefault(video, 0L)
                     );
                 })
@@ -422,10 +444,12 @@ public class MVCVideoHostingController {
     }
 
     private Comparator<VideoSearchDto> getComparator(String sortBy) {
-        return switch (sortBy) {
-            case "newest" -> Comparator.comparing(VideoSearchDto::getVideoRatingUsual).reversed(); //DEBUG!!!
-            case "rating" -> Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts).reversed();
-            default -> Comparator.comparing(VideoSearchDto::getVideoId); // По умолчанию
+        return switch (sortBy.toLowerCase()) {
+            case "rating_user" -> Comparator.comparing(VideoSearchDto::getVideoRatingUsual).reversed(); //DEBUG!
+            case "rating_expert" -> Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts).reversed();
+            case "views" -> Comparator.comparingLong(VideoSearchDto::getViews).reversed();
+            case "newest" -> Comparator.comparing(VideoSearchDto::getVideoUploadDate).reversed();
+            default -> Comparator.comparing(VideoSearchDto::getVideoId);
         };
     }
 
