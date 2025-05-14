@@ -341,26 +341,25 @@ public class MVCVideoHostingController {
             @RequestParam("query") String query,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "sortBy", defaultValue = "rating_expert") String sortBy,
+            @RequestParam(value = "reverseOrder", required = false, defaultValue = "false") Boolean reverseOrder,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate endDate,
+            @RequestParam(value = "authorId", required = false) Long authorId,
             Model model) {
 
         model.addAttribute("categories", multimediaClassRepository.findAll());
         model.addAttribute("category", category);
         model.addAttribute("sortBy", sortBy);
+        model.addAttribute("authorId", authorId);
+        model.addAttribute("reverseOrder", reverseOrder);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         model.addAttribute("startDate", startDate == null ? null : startDate.format(formatter));
         model.addAttribute("endDate", endDate == null ? null : endDate.format(formatter));
 
-        if (query == null || query.trim().isEmpty()) {
-            model.addAttribute("query", query);
-            model.addAttribute("videos", Collections.emptyList());
-            return "video_search";
-        }
 
         // Получение видео по запросу и фильтрам
         List<Video> videos = videoRepository.findWithFilters(query, category, startDate == null ? null : startDate.atStartOfDay(),
-                endDate == null ? null : endDate.atTime(23, 59, 59));
+                endDate == null ? null : endDate.atTime(23, 59, 59), authorId);
 
         // Сбор просмотров и рейтингов
         Map<Video, Long> videoViews = getVideoViewCounts(videos);
@@ -434,7 +433,7 @@ public class MVCVideoHostingController {
                             videoViews.getOrDefault(video, 0L)
                     );
                 })
-                .sorted(getComparator(sortBy))
+                .sorted(getComparator(sortBy, reverseOrder))
                 .toList();
 
         // Добавление данных в модель
@@ -443,15 +442,28 @@ public class MVCVideoHostingController {
         return "video_search";
     }
 
-    private Comparator<VideoSearchDto> getComparator(String sortBy) {
-        return switch (sortBy.toLowerCase()) {
-            case "rating_user" -> Comparator.comparing(VideoSearchDto::getVideoRatingUsual).reversed(); //DEBUG!
-            case "rating_expert" -> Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts).reversed();
-            case "views" -> Comparator.comparingLong(VideoSearchDto::getViews).reversed();
-            case "newest" -> Comparator.comparing(VideoSearchDto::getVideoUploadDate).reversed();
-            default -> Comparator.comparing(VideoSearchDto::getVideoId);
-        };
+    private Comparator<VideoSearchDto> getComparator(String sortBy, boolean isReversedOrder) {
+        Comparator<VideoSearchDto> comparator;
+
+        switch (sortBy.toLowerCase()) {
+            case "rating_user" ->
+                    comparator = Comparator.comparing(VideoSearchDto::getVideoRatingUsual);
+            case "rating_expert" ->
+                    comparator = Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts);
+            case "newest" ->
+                    comparator = Comparator.comparing(VideoSearchDto::getVideoUploadDate);
+            case "title" ->
+                    comparator = Comparator.comparing(VideoSearchDto::getVideoTitle).reversed();
+            // Включая сортировку по кол-ву просмотров
+            default ->
+                    comparator = Comparator.comparingLong(VideoSearchDto::getViews);
+        }
+        if (isReversedOrder) {
+            comparator = comparator.reversed();
+        }
+        return comparator.thenComparingLong(VideoSearchDto::getViews).reversed();
     }
+
 
 
     @GetMapping("/subscriptions")

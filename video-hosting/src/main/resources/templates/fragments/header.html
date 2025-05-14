@@ -54,12 +54,12 @@
                     <form th:action="@{/logout}" method="post" class="logout-form">
                         <button type="submit" class="user-action-btn">Выход</button>
                     </form>
-                </div>
 
-                <!-- Админка -->
-                <li class="admin-link" sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/admin}">Админка</a>
-                </li>
+                    <!-- Админка -->
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <a class="user-action-btn admin-action-btn" th:href="@{/admin}">Админка</a>
+                    </div>
+                </div>
 
                 <!-- Гости -->
                 <div class="guest-menu" sec:authorize="!isAuthenticated()">

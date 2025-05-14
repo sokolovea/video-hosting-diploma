@@ -53,7 +53,7 @@
                         <div class="channel-subs" th:text="${subscribers} + ' подписчиков'">Число подписчиков</div>
                     </div>
                     <div th:if="${(currentUserId == null) || (video.getAuthor().getUserId() != currentUserId)}">
-                        <form th:action="@{/api/user/subscribe}" method="post" class="user-info">
+                        <form th:action="@{/api/user/subscribe}" method="post">
                             <input type="hidden" name="author" th:value="${authorId}">
                             <input type="hidden" name="actionSubscribeEnum" th:value="${isSubscribed ? 'UNSUBSCRIBE' : 'SUBSCRIBE'}">
                             <button class="subscribe-button" type="submit" th:text="${isSubscribed ? 'Отписаться' : 'Подписаться'}">Подписаться</button>

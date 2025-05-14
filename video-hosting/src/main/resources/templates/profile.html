@@ -66,17 +66,22 @@
             <div class="alert alert-primary" role="alert" th:text="${success}" th:if="${success}"></div>
             <div class="profile-info">
                 <div class="profile-image">
-                    <img id="profile-image" th:src="@{${user.imagePath}}" alt="Фото профиля">
+                    <img id="profile-image" th:src="@{'/' + ${user.imagePath}}" alt="Фото профиля">
                 </div>
                 <div class="profile-details">
                     <p><strong>Логин:</strong> <span th:text="${user.login}"></span></p>
                     <p><strong>Имя:</strong> <span class="editable" id="name" th:text="${user.name}"></span></p>
                     <p><strong>Фамилия:</strong> <span class="editable" id="surname" th:text="${user.surname}"></span></p>
                     <p><strong>Отчество:</strong> <span class="editable" id="patronymic" th:text="${user.patronymic}"></span></p>
-                    <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
-                    <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
+                    <div th:if="${isCurrentUserEquals}">
+                        <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
+                        <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
+                    </div>
                     <p><strong>Дата регистрации:</strong> <span th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}"></span></p>
-                    <a th:href="@{/profile/edit}">Редактировать профиль</a>
+                    <a th:href="@{/search(query=${''}, authorId=${user.id})}">Видео данного пользователя</a>
+                    <div th:if="${isCurrentUserEquals}">
+                        <a th:href="@{/profile/edit}">Редактировать профиль</a>
+                    </div>
                     <table>
                         <thead>
                         <tr>

@@ -83,6 +83,7 @@
             <div class="profile-info">
                 <div class="profile-details">
                     <form th:action="@{/profile/edit}" method="post" th:object="${user}" enctype="multipart/form-data">
+                        <input type="hidden" id="userId" name="userId" th:field="*{userId}">
                         <div class="form-group">
                             <label for="login">Логин (нельзя изменить)</label>
                             <span id="login" th:text="*{login}"></span>

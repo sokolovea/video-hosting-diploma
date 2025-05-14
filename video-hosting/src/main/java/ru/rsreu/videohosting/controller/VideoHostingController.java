@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
@@ -65,12 +66,31 @@ public class VideoHostingController {
         return "history_views";
     }
 
-    @GetMapping("/profile")
-    public String profile(Model model, Principal principal) {
+    @GetMapping("/profile/{userId}")
+    public String profile(Model model, Principal principal,
+                          @PathVariable(required = false) Long userId) {
         String username = principal.getName();
-        User user = userRepository.findByLogin(username).get();
+        Optional <User> optionalUser = Optional.empty();
+        if (username != null) {
+            optionalUser = userRepository.findByLogin(username);
+        }
+        boolean isCurrentUserEquals = optionalUser.isPresent() && Objects.equals(optionalUser.get().getUserId(), userId);
+        model.addAttribute("isCurrentUserEquals", isCurrentUserEquals);
+        User user = null;
+        if (isCurrentUserEquals) {
+            user = optionalUser.get();
+        } else {
+            Optional<User> tempUser = userRepository.findById(userId);
+            if (tempUser.isPresent()) {
+                user = tempUser.get();
+            } else {
+                return "redirect:/404";
+            }
+
+        }
         Map<MultimediaClass, Double> mapUserRating = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses());
         UserProfileDTO profileDto = new UserProfileDTO(
+                user.getUserId(),
                 user.getLogin(),
                 user.getSurname(),
                 user.getName(),
@@ -93,6 +113,7 @@ public class VideoHostingController {
         String username = principal.getName();
         User user = userRepository.findByLogin(username).get();
         UserProfileEditDto profileEditDto = new UserProfileEditDto(
+                user.getUserId(),
                 user.getLogin(),
                 "",
                 user.getSurname(),
@@ -105,6 +126,16 @@ public class VideoHostingController {
 
         model.addAttribute("user", profileEditDto);
         return "profile_edit";
+    }
+
+    @GetMapping("/profile")
+    public String profile(Model model, Principal principal) {
+        String username = principal.getName();
+        if (username == null || username.isEmpty()) {
+            return "redirect:/404";
+        }
+        User user = userRepository.findByLogin(username).get();
+        return "redirect:/profile/" + user.getUserId();
     }
 
 
@@ -137,7 +168,7 @@ public class VideoHostingController {
 
             userService.updateUser(userProfileEditDto);
             redirectAttributes.addFlashAttribute("success", "Обновление прошло успешно!");
-            return "redirect:/profile";
+            return "redirect:/profile/" + userProfileEditDto.getUserId();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Ошибка обновления профиля. Попробуйте позднее");
             return "redirect:/profile/edit";
@@ -150,6 +181,7 @@ public class VideoHostingController {
         User user = userRepository.findByLogin(username).get();
 //        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses()); //DEBUG
         UserProfileDTO profileDto = new UserProfileDTO(
+                user.getUserId(),
                 user.getLogin(),
                 user.getSurname(),
                 user.getName(),

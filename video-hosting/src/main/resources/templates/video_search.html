@@ -82,20 +82,28 @@
                 <div>
                     <label for="category">Категория</label>
                     <select id="category" name="category">
-                        <option value="" th:text="'Все категории'" selected="selected"></option>
-                        <option th:each="category : ${categories}"
-                                th:value="${category.getMultimediaClassName()}"
-                                th:text="${category.getMultimediaClassName()}"></option>
+                        <option value="" th:selected="${category == null || category.isEmpty()}">Все категории</option>
+                        <option th:each="eachCategory : ${categories}"
+                                th:value="${eachCategory.getMultimediaClassName()}"
+                                th:text="${eachCategory.getMultimediaClassName()}"
+                                th:selected="${eachCategory.getMultimediaClassName().equals(category)}">
+                        </option>
                     </select>
+
                 </div>
                 <div>
-                    <label for="sortBy">Критерий поиска</label>
+                    <label for="sortBy">Критерий сортировки</label>
                     <select id="sortBy" name="sortBy">
                         <option value="rating_user" th:selected="${sortBy == 'rating_user'}">Рейтинг пользователей</option>
                         <option value="rating_expert" th:selected="${sortBy == 'rating_expert'}">Рейтинг экспертов</option>
                         <option value="views" th:selected="${sortBy == 'views'}">Просмотры</option>
+                        <option value="title" th:selected="${sortBy == 'title'}">Наименование</option>
                         <option value="newest" th:selected="${sortBy == 'newest'}">Новизна</option>
                     </select>
+                </div>
+                <div>
+                    <label for="reverseOrder">Обратная сортировка</label>
+                    <input type="checkbox" id="reverseOrder" name="reverseOrder" th:checked="${reverseOrder}" />
                 </div>
                 <div>
                     <label for="startDate">Начальная дата</label>
@@ -106,7 +114,12 @@
                     <input type="text" id="endDate" name="endDate" class="datepicker" th:value="${endDate}" placeholder="Выберите дату">
                 </div>
                 <div>
-                    <button type="submit">Искать</button>
+                    <label for="authorId">id автора</label>
+                    <input type="text" id="authorId" name="authorId" th:value="${authorId}">
+                </div>
+                <div>
+                    <label for="buttonSearch">Поиск</label>
+                    <button id="buttonSearch" name="buttonSearch" type="submit">Искать</button>
                 </div>
             </form>
 
@@ -132,8 +145,24 @@
                     <td>
                         <a th:href="@{/video/{id}(id=${video.getVideoId()})}" th:text="${video.getVideoTitle()}"></a>
                     </td>
-                    <td th:text="${video.getVideoRatingExperts() == -1.0 ? 'Не оценено' : @ratingFormatter.formatRating(video.getVideoRatingExperts())}">Рейтинг экспертов</td>
-                    <td th:text="${video.getVideoRatingUsual() == -1.0 ? 'Не оценено' : @ratingFormatter.formatRating(video.getVideoRatingUsual())}">Рейтинг пользователей</td>
+                    <td th:text="${video.getVideoRatingExperts() == -1.0 ? 'Не оценено' : @ratingFormatter.formatRating(video.getVideoRatingExperts())}"
+                        th:classappend="${video.getVideoRatingExperts() >= 0.9 ? 'rating-green' :
+                     (video.getVideoRatingExperts() >= 0.75 ? 'rating-yellow-green' :
+                     (video.getVideoRatingExperts() >= 0.5 ? 'rating-yellow' :
+                     (video.getVideoRatingExperts() >= 0.25 ? 'rating-orange' :
+                     (video.getVideoRatingExperts() >= 0 ? 'rating-red' : ''))))}">
+                        Рейтинг экспертов
+                    </td>
+
+                    <td th:text="${video.getVideoRatingUsual() == -1.0 ? 'Не оценено' : @ratingFormatter.formatRating(video.getVideoRatingUsual())}"
+                        th:classappend="${video.getVideoRatingUsual() >= 0.9 ? 'rating-green' :
+                     (video.getVideoRatingUsual() >= 0.75 ? 'rating-yellow-green' :
+                     (video.getVideoRatingUsual() >= 0.5 ? 'rating-yellow' :
+                     (video.getVideoRatingUsual() >= 0.25 ? 'rating-orange' :
+                     (video.getVideoRatingUsual() >= 0 ? 'rating-red' : ''))))}">
+                        Рейтинг пользователей
+                    </td>
+
 
                     <td th:text="${video.getViews()}">Просмотры</td>
                     <td th:text="${#temporals.format(video.getVideoUploadDate(), 'dd.MM.yyyy HH:mm')}">Дата выкладки</td>

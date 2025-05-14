@@ -27,17 +27,24 @@
                 <tbody>
                 <tr th:each="subscription : ${subscriptions}">
                     <td>
-                        <a th:href="@{/video/{id}(id=${1})}">
-                            <img class="user-avatar" th:src="${subscription.getAuthor().getImagePath()}" alt="Миниатюра">
+                        <a th:href="@{/profile/{id}(id=${subscription.getAuthor().getUserId()})}">
+                            <div>
+                                <img class="user-avatar" th:src="${subscription.getAuthor().getImagePath()}" alt="Миниатюра">
+                            </div>
+                            <div>
+                                <label th:text="${subscription.getAuthor().getLogin()}"></label>
+                            </div>
                         </a>
                     </td>
                     <td th:text="${#temporals.format(subscription.getSubscribedAt(), 'dd.MM.yyyy')}"></td>
                     <td>
-                        <form th:action="@{/api/user/subscribe}" method="post" class="user-info">
-                            <input type="hidden" name="author" th:value="${subscription.getAuthor().getUserId()}">
-                            <input type="hidden" name="actionSubscribeEnum" th:value="${subscription.isSubscribed() ? 'UNSUBSCRIBE' : 'SUBSCRIBE'}">
-                            <button class="subscribe-button" type="submit" th:text="${subscription.isSubscribed() ? 'Отписаться' : 'Подписаться'}">Подписаться</button>
-                        </form>
+                        <div>
+                            <form th:action="@{/api/user/subscribe}" method="post">
+                                <input type="hidden" name="author" th:value="${subscription.getAuthor().getUserId()}">
+                                <input type="hidden" name="actionSubscribeEnum" th:value="${subscription.isSubscribed() ? 'UNSUBSCRIBE' : 'SUBSCRIBE'}">
+                                <button class="subscribe-button" type="submit" th:text="${subscription.isSubscribed() ? 'Отписаться' : 'Подписаться'}">Подписаться</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 </tbody>

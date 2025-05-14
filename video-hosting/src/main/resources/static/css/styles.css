@@ -32,6 +32,7 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-left: -20px;
 }
 
 header h1 {
@@ -144,15 +145,15 @@ nav ul li a:hover {
     background-color: #0056b3;
 }
 
-/* Для админки */
-.admin-link a {
-    font-weight: bold;
-    color: #FFD700;
+.header-right .admin-action-btn {
+    background-color: orangered;
 }
 
-.admin-link a:hover {
-    color: #FFC107;
+.header-right .admin-action-btn:hover {
+    background-color: darkred;
 }
+
+
 
 /* Блок для гостей */
 .guest-menu {
@@ -943,5 +944,23 @@ button:hover {
     color: orange;
     font-weight: bold;
 }
+
+.rating-green {
+    color: #006400;
+}
+.rating-yellow-green {
+    color: #556B2F;
+}
+.rating-yellow {
+    color: #DAA520;
+}
+.rating-orange {
+    color: #FF8C00;
+}
+.rating-red {
+    color: #B22222;
+}
+
+
 
 

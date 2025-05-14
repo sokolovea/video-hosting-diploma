@@ -23,8 +23,14 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
     private MultimediaClassRepository multimediaClassRepository;
 
     @Override
-    public List<Video> findWithFilters(String query, String category, LocalDateTime startDate, LocalDateTime endDate) {
-        StringBuilder jpql = new StringBuilder("SELECT v FROM Video v WHERE LOWER(v.title) LIKE LOWER(:query)");
+    public List<Video> findWithFilters(String query, String category, LocalDateTime startDate,
+                                       LocalDateTime endDate, Long authorId) {
+        StringBuilder jpql = null;
+        if (query == null || query.isEmpty()) {
+            jpql = new StringBuilder("SELECT v FROM Video v WHERE v.videoId >= 0");
+        } else {
+            jpql = new StringBuilder("SELECT v FROM Video v WHERE LOWER(v.title) LIKE LOWER(:query)");
+        }
 
         if (category != null && !category.isEmpty()) {
             jpql.append(" AND :category MEMBER OF v.multimediaClasses");
@@ -35,9 +41,14 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
         if (endDate != null) {
             jpql.append(" AND v.createdAt <= :endDate");
         }
+        if (authorId != null) {
+            jpql.append(" AND v.author.userId = :authorId");
+        }
 
         TypedQuery<Video> typedQuery = entityManager.createQuery(jpql.toString(), Video.class);
-        typedQuery.setParameter("query", "%" + query + "%");
+        if (query != null && !query.isEmpty()) {
+            typedQuery.setParameter("query", "%" + query + "%");
+        }
 
         if (category != null && !category.isEmpty()) {
             MultimediaClass categoryObj = multimediaClassRepository.findByMultimediaClassName(category)
@@ -49,6 +60,9 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
         }
         if (endDate != null) {
             typedQuery.setParameter("endDate", endDate);
+        }
+        if (authorId != null) {
+            typedQuery.setParameter("authorId", authorId);
         }
 
         return typedQuery.getResultList();
