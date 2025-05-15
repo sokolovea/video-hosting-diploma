@@ -39,4 +39,6 @@ public interface UserVideoMarkRepository extends JpaRepository<UserVideoMark, Us
 
     @Query("SELECT uvm FROM UserVideoMark uvm WHERE uvm.user = :user and uvm.video = :video")
     UserVideoMark findByUserAndVideo(@Param("user") User user, @Param("video") Video video);
+
+    void deleteByVideo(Video video);
 }

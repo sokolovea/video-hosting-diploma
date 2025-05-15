@@ -22,4 +22,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query("SELECT count(c) FROM Comment c WHERE c.user = :author AND :classificator MEMBER OF c.video.multimediaClasses")
     Long countAllByAuthorAndHavingClass(@Param("author") User author, @Param("classificator") MultimediaClass classificator);
+
+    void deleteByVideo(Video video);
 }

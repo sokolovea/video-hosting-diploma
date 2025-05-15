@@ -7,11 +7,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.*;
 import ru.rsreu.videohosting.entity.*;
@@ -20,6 +22,7 @@ import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 import ru.rsreu.videohosting.service.*;
 
+import javax.management.DescriptorKey;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
@@ -90,6 +93,7 @@ public class MVCVideoHostingController {
         model.addAttribute("multimediaClasses", multimediaClasses);
         model.addAttribute("video", new VideoUploadDTO());
         model.addAttribute("formName", "Загрузка видео");
+        model.addAttribute("submitButtonName", "Загрузить");
         return "upload_video";
     }
 
@@ -111,6 +115,7 @@ public class MVCVideoHostingController {
                 new ArrayList<String>()
         ));
         model.addAttribute("formName", "Редактирование видео");
+        model.addAttribute("submitButtonName", "Изменить");
         return "upload_video";
     }
 
@@ -134,6 +139,7 @@ public class MVCVideoHostingController {
 
         if (videoUploadDTO.getVideoId() == null) {
             model.addAttribute("formName", "Загрузка видео");
+            model.addAttribute("submitButtonName", "Загрузить");
             if (videoUploadDTO.getImageFile() == null || videoUploadDTO.getImageFile().isEmpty()) {
                 result.rejectValue("imageFile", "error.imageFile",  "Изображение должно быть выбрано!");
             }
@@ -148,6 +154,7 @@ public class MVCVideoHostingController {
             }
         } else {
             model.addAttribute("formName", "Редактирование видео");
+            model.addAttribute("submitButtonName", "Изменить");
             if (videoRepository.existsByAuthorAndVideoId(optionalUser.get(), videoUploadDTO.getVideoId())) {
                 video = videoRepository.findById(videoUploadDTO.getVideoId()).get();
             } else {
@@ -230,6 +237,33 @@ public class MVCVideoHostingController {
         return "redirect:/upload_video?error"; //DEBUG
     }
 
+    @Transactional
+    @DeleteMapping("/video")
+    public String deleteVideo(@RequestParam("videoId") Long videoId,
+                            RedirectAttributes redirectAttributes,
+                            Principal principal) {
+
+        if (principal == null || videoId == null) {
+            return "redirect:/403";
+        }
+        User user = userRepository.findByLogin(principal.getName()).get();
+        Optional<Video> optionalVideo = videoRepository.findById(videoId);
+        if (optionalVideo.isEmpty()) {
+            return "redirect:/404";
+        }
+        Video video = optionalVideo.get();
+        User author = video.getAuthor();
+        if (!Objects.equals(author.getUserId(), user.getUserId())) {
+            return "redirect:/403";
+        }
+
+        videoMarkRepository.deleteByVideo(video);
+        commentRepository.deleteByVideo(video);
+        videoViewsRepository.deleteByVideo(video);
+        videoRepository.delete(video);
+        redirectAttributes.addFlashAttribute("success", "Удаление видео произведено успешно!");
+        return "redirect:/profile";
+    }
 
     public SortedMap<Comment, List<Comment>> buildCommentTree(List<Comment> allComments) {
 
@@ -369,6 +403,12 @@ public class MVCVideoHostingController {
                         jdbcRatingDao::getVideoRating
                 ));
 
+        Map<Long, Map<MultimediaClass, RelevanceDTO>> allRelevance = videos.stream()
+                .collect(Collectors.toMap(
+                        Video::getVideoId,
+                        jdbcRatingDao::getVideoRelevance
+                ));
+
         MultimediaClass multimediaClass = null;
         if (category != null && !category.trim().isEmpty()) {
             multimediaClass = multimediaClassRepository.findByMultimediaClassName(category)
@@ -377,10 +417,16 @@ public class MVCVideoHostingController {
 
         // Подсчет среднего рейтинга или извлечение конкретного
         Map<Video, RatingDto> aggregatedRatings = new HashMap<>();
+        Map<Video, RelevanceDTO> aggregatedVideoRelevance = new HashMap<>();
         for (Video video : videos) {
             Map<MultimediaClass, RatingDto> videoRatings = allRatings.get(video.getVideoId());
+            Map<MultimediaClass, RelevanceDTO> videoRelevance = allRelevance.get(video.getVideoId());
+
             Double userRating = null;
             Double expertRating = null;
+
+            Double userRelevance = null;
+            Double expertRelevance = null;
 
             if (multimediaClass == null) {
                 // Средний рейтинг по всем категориям
@@ -404,31 +450,58 @@ public class MVCVideoHostingController {
                 if (expertRating != null) {
                     expertRating /= videoRatings.size();
                 }
-            } else {
-                // Рейтинг только по указанной категории
-                RatingDto ratingDto = videoRatings.get(multimediaClass);
-                if (ratingDto != null) {
-                    if (ratingDto.getRatingUser() != null) {
-                        userRating = ratingDto.getRatingUser();
+
+                for (RelevanceDTO relevanceDto : videoRelevance.values()) {
+                    if (relevanceDto.getRelevanceUser() != null) {
+                        if (userRelevance == null) {
+                            userRelevance = 0.0;
+                        }
+                        userRelevance += relevanceDto.getRelevanceUser();
                     }
-                    if (ratingDto.getRatingExpert() != null) {
-                        expertRating = ratingDto.getRatingExpert();
+                    if (relevanceDto.getRelevanceExpert() != null) {
+                        if (expertRelevance == null) {
+                            expertRelevance = 0.0;
+                        }
+                        expertRelevance += relevanceDto.getRelevanceExpert();
+                    }
+                }
+                if (userRelevance != null) {
+                    userRelevance /= videoRelevance.size();
+                }
+                if (expertRelevance != null) {
+                    expertRelevance /= videoRelevance.size();
+                }
+            } else {
+                // Релевантность только для указанной категории
+                RelevanceDTO relevanceDto = videoRelevance.get(multimediaClass);
+                if (relevanceDto != null) {
+                    if (relevanceDto.getRelevanceUser() != null) {
+                        userRelevance = relevanceDto.getRelevanceUser();
+                    }
+                    if (relevanceDto.getRelevanceExpert() != null) {
+                        expertRelevance = relevanceDto.getRelevanceExpert();
                     }
                 }
             }
 
             aggregatedRatings.put(video, new RatingDto(userRating == null ? -1 : userRating,
                     expertRating == null ? -1 : expertRating));
+            aggregatedVideoRelevance.put(video, new RelevanceDTO(userRelevance == null ? -1 : userRelevance,
+                    expertRelevance == null ? -1 : expertRelevance));
         }
+
 
         // Сбор DTO и сортировка
         List<VideoSearchDto> videosDTO = videos.stream()
                 .map(video -> {
                     RatingDto rating = aggregatedRatings.get(video);
+                    RelevanceDTO relevance = aggregatedVideoRelevance.get(video);
                     return new VideoSearchDto(
                             video,
-                            rating.getRatingExpert(),
                             rating.getRatingUser(),
+                            rating.getRatingExpert(),
+                            relevance.getRelevanceUser(),
+                            relevance.getRelevanceExpert(),
                             video.getCreatedAt(),
                             videoViews.getOrDefault(video, 0L)
                     );
@@ -447,9 +520,13 @@ public class MVCVideoHostingController {
 
         switch (sortBy.toLowerCase()) {
             case "rating_user" ->
-                    comparator = Comparator.comparing(VideoSearchDto::getVideoRatingUsual);
+                    comparator = Comparator.comparing(VideoSearchDto::getVideoRatingUser);
             case "rating_expert" ->
-                    comparator = Comparator.comparingDouble(VideoSearchDto::getVideoRatingExperts);
+                    comparator = Comparator.comparingDouble(VideoSearchDto::getVideoRatingExpert);
+            case "relevance_user" ->
+                    comparator = Comparator.comparing(VideoSearchDto::getVideoRelevanceUser);
+            case "relevance_expert" ->
+                    comparator = Comparator.comparingDouble(VideoSearchDto::getVideoRelevanceExpert);
             case "newest" ->
                     comparator = Comparator.comparing(VideoSearchDto::getVideoUploadDate);
             case "title" ->

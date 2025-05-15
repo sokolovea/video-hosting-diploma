@@ -60,7 +60,14 @@
                         </form>
                     </div>
                     <div th:if="${(currentUserId != null) && (video.getAuthor().getUserId() == currentUserId)}">
-                        <button class="subscribe-button">Я - автор</button>
+                        <div>
+                            <button class="subscribe-button">Я - автор</button>
+                        </div>
+                    </div>
+                    <div th:if="${(currentUserId != null) && (video.getAuthor().getUserId() == currentUserId)}">
+                        <div>
+                            <a th:href="@{/video_edit/{id}(id=${videoId})}" class="action-button">Редактировать видео</a>
+                        </div>
                     </div>
 
                     <div class="playlist-dropdown">

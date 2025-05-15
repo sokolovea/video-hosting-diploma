@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import ru.rsreu.videohosting.dto.CountSumDto;
 import ru.rsreu.videohosting.dto.RatingDto;
+import ru.rsreu.videohosting.dto.RelevanceDTO;
 import ru.rsreu.videohosting.dto.VideoRatingDto;
 import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.User;
@@ -12,6 +13,8 @@ import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.repository.*;
 
 import javax.sql.DataSource;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -63,11 +66,12 @@ public class JdbcRatingDao {
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final RoleRepository roleRepository;
+    private final VideoViewsRepository videoViewsRepository;
 
     public JdbcRatingDao(@Autowired DataSource dataSource,
                          @Autowired MarkRepository markRepository,
                          @Autowired UserVideoMarkRepository videoMarkRepository,
-                         @Autowired UserCommentMarkRepository commentMarkRepository, UserRepository userRepository, UserVideoMarkRepository userVideoMarkRepository, VideoRepository videoRepository, CommentRepository commentRepository, RoleRepository roleRepository) {
+                         @Autowired UserCommentMarkRepository commentMarkRepository, UserRepository userRepository, UserVideoMarkRepository userVideoMarkRepository, VideoRepository videoRepository, CommentRepository commentRepository, RoleRepository roleRepository, VideoViewsRepository videoViewsRepository) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.markRepository = markRepository;
         this.videoMarkRepository = videoMarkRepository;
@@ -77,6 +81,7 @@ public class JdbcRatingDao {
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.roleRepository = roleRepository;
+        this.videoViewsRepository = videoViewsRepository;
     }
 
     public Map<MultimediaClass, Double> getUserRating(User user, List<MultimediaClass> classifications) {
@@ -162,5 +167,35 @@ public class JdbcRatingDao {
                     videoSumMarksByClasses.get(classification.getMultimediaClassId()).getRatingDto());
         }
         return videoRatingByClasses;
+    }
+
+    public Map<MultimediaClass, RelevanceDTO> getVideoRelevance(Video video) {
+        Map<MultimediaClass, RelevanceDTO> resultVideoRelevance = new HashMap<>();
+        Map<MultimediaClass, RatingDto> videoRatingByClasses = getVideoRating(video);
+        double alpha = 0.3;
+        double beta = 0.3;
+        double gamma = 0.4;
+
+        double lambda = 0.1;
+
+        for (MultimediaClass multimediaClass : videoRatingByClasses.keySet()) {
+
+            RatingDto ratingDto = videoRatingByClasses.get(multimediaClass);
+            double ratingUser =  ratingDto.getRatingUser() == null ? 0 : ratingDto.getRatingUser();
+            double ratingExpert = ratingDto.getRatingExpert() == null ? 0 :ratingDto.getRatingExpert();
+
+            long views = videoViewsRepository.countByVideo(video);
+            var uploadDate = video.getCreatedAt();
+
+            double V = Math.log10(views + 1);
+            double ageDays = Duration.between(uploadDate, LocalDateTime.now()).toDays();
+            double F = Math.exp(-lambda * ageDays);
+
+            double scoreUser = alpha * ratingUser + beta * ratingExpert + gamma * F;
+            double scoreExpert = alpha * ratingExpert + beta * V + gamma * F;
+
+            resultVideoRelevance.put(multimediaClass, new RelevanceDTO(scoreUser, scoreExpert));
+        }
+        return resultVideoRelevance;
     }
 }

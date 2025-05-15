@@ -1,91 +1,95 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Страница загрузки видео">
-    <title>Загрузка видео</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <style>
+<!--<!DOCTYPE html>-->
+<!--<html lang="ru">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <meta name="description" content="Страница загрузки видео">-->
+<!--    <title>Загрузка видео</title>-->
+<!--    <link rel="stylesheet" th:href="@{/css/styles.css}">-->
+<!--    <style>-->
 
-        .upload-section {
-            margin: 50px auto;
-            text-align: center;
-        }
+<!--        .upload-section {-->
+<!--            margin: 50px auto;-->
+<!--            text-align: center;-->
+<!--        }-->
 
-        h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #007bff;
-        }
-        .upload-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .form-group {
-            text-align: left;
-        }
-        .form-group label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            background-color: #f7f7f7;
-        }
-        .form-group textarea {
-            resize: vertical;
-        }
-        .form-group select {
-            height: auto;
-        }
+<!--        h2 {-->
+<!--            margin-bottom: 20px;-->
+<!--            font-size: 24px;-->
+<!--            color: #007bff;-->
+<!--        }-->
+<!--        .upload-form {-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            gap: 15px;-->
+<!--        }-->
+<!--        .form-group {-->
+<!--            text-align: left;-->
+<!--        }-->
+<!--        .form-group label {-->
+<!--            font-weight: bold;-->
+<!--            margin-bottom: 5px;-->
+<!--            display: block;-->
+<!--        }-->
+<!--        .form-group input,-->
+<!--        .form-group textarea,-->
+<!--        .form-group select {-->
+<!--            width: 100%;-->
+<!--            padding: 10px;-->
+<!--            border: 1px solid #ddd;-->
+<!--            border-radius: 5px;-->
+<!--            font-size: 14px;-->
+<!--            background-color: #f7f7f7;-->
+<!--        }-->
+<!--        .form-group textarea {-->
+<!--            resize: vertical;-->
+<!--        }-->
+<!--        .form-group select {-->
+<!--            height: auto;-->
+<!--        }-->
 
-    </style>
-</head>
-<body>
-<div th:replace="fragments/header.html"></div>
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div th:replace="fragments/header.html"></div>-->
 
-<main>
-    <section class="upload-section">
-        <div class="container">
-            <h2>Редактирование видео</h2>
-            <form class="upload-form" th:action="@{/video_edit}" th:object="${video}" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="title">Название видео</label>
-                    <input type="text" id="title" name="title" required placeholder="Введите название видео">
-                </div>
-                <div class="form-group">
-                    <label for="description">Описание</label>
-                    <textarea id="description" name="description" rows="4" required placeholder="Введите описание видео"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="videoFile">Файл видео</label>
-                    <input type="file" id="videoFile" name="videoFile" required>
-                </div>
-                <div class="form-group">
-                    <label for="imageFile">Фото обложки</label>
-                    <input type="file" id="imageFile" name="imageFile" required>
-                </div>
-                <div class="form-group">
-                    <label for="categories">Категории</label>
-                    <select id="categories" name="categories" multiple size="5" required>
-                        <option th:each="eachClass : ${multimediaClasses}" th:value="${eachClass}" th:text="${eachClass}"></option>
-                    </select>
-                </div>
-                <button class="submit-button" type="submit" style="max-width: 150px">Загрузить</button>
-            </form>
-        </div>
-    </section>
-</main>
+<!--<main>-->
+<!--    <section class="upload-section">-->
+<!--        <div class="container">-->
+<!--            <h2>Редактирование видео</h2>-->
+<!--            <form class="upload-form" th:action="@{/video_edit}" th:object="${video}" method="post" enctype="multipart/form-data">-->
+<!--                <div class="form-group">-->
+<!--                    <label for="title">Название видео</label>-->
+<!--                    <input type="text" id="title" name="title" required placeholder="Введите название видео">-->
+<!--                </div>-->
+<!--                <div class="form-group">-->
+<!--                    <label for="description">Описание</label>-->
+<!--                    <textarea id="description" name="description" rows="4" required placeholder="Введите описание видео"></textarea>-->
+<!--                </div>-->
+<!--                <div class="form-group">-->
+<!--                    <label for="videoFile">Файл видео</label>-->
+<!--                    <input type="file" id="videoFile" name="videoFile" required>-->
+<!--                </div>-->
+<!--                <div class="form-group">-->
+<!--                    <label for="imageFile">Фото обложки</label>-->
+<!--                    <input type="file" id="imageFile" name="imageFile" required>-->
+<!--                </div>-->
+<!--                <div class="form-group">-->
+<!--                    <label for="categories">Категории</label>-->
+<!--                    <select id="categories" name="categories" multiple size="5" required>-->
+<!--                        <option th:each="eachClass : ${multimediaClasses}" th:value="${eachClass}" th:text="${eachClass}"></option>-->
+<!--                    </select>-->
+<!--                </div>-->
+<!--                <button class="submit-button" type="submit" style="max-width: 150px">Редактировать</button>-->
+<!--            </form>-->
+<!--            <form th:action="@{/video/}" th:object="${video}" method="post">-->
+<!--                <input type="hidden" name="_method" value="DELETE">-->
+<!--                <button type="submit">Удалить видео</button>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </section>-->
+<!--</main>-->
 
-<div th:replace="fragments/footer.html"></div>
-</body>
-</html>
+<!--<div th:replace="fragments/footer.html"></div>-->
+<!--</body>-->
+<!--</html>-->

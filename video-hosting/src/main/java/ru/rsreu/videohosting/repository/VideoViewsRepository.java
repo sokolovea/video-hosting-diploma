@@ -27,4 +27,6 @@ public interface VideoViewsRepository extends JpaRepository<VideoViews, Long> {
             " Video vi on v.video.videoId = vi.videoId WHERE v.video IN :videos " +
             "GROUP BY vi")
     List<Object[]> countViewsByVideos(@Param("videos") List<Video> videos);
+
+    void deleteByVideo(Video video);
 }

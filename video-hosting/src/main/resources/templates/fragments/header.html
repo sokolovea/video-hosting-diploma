@@ -18,10 +18,10 @@
             <nav class="main-nav">
                 <ul>
                     <li th:classappend="${#request.getRequestURI() == '/'} ? 'active'">
-                        <a th:href="@{/}">Главная экспертов</a>
+                        <a th:href="@{/search(query=${''}, sortBy='relevance_expert')}">Главная экспертов</a>
                     </li>
                     <li th:classappend="${#request.getRequestURI() == '/'} ? 'active'">
-                        <a th:href="@{/}">Главная пользователей</a>
+                        <a th:href="@{/search(query=${''}, sortBy='relevance_user')}">Главная пользователей</a>
                     </li>
                     <li th:classappend="${#request.getRequestURI().startsWith('/subscriptions')} ? 'active'">
                         <a th:href="@{/subscriptions}" sec:authorize="isAuthenticated()">Подписки</a>
@@ -42,7 +42,7 @@
             <div class="header-right">
                 <!-- Поиск -->
                 <form th:action="@{/search}" method="get" class="search-form">
-                    <input type="text" name="query" placeholder="Поиск..." required>
+                    <input type="text" name="query" placeholder="Поиск...">
                     <button type="submit" class="search-button">
                         <img th:src="@{/images/search-icon.png}" width="24" height="24" alt="Поиск" />
                     </button>

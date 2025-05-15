@@ -27,9 +27,9 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
                                        LocalDateTime endDate, Long authorId) {
         StringBuilder jpql = null;
         if (query == null || query.isEmpty()) {
-            jpql = new StringBuilder("SELECT v FROM Video v WHERE v.videoId >= 0");
+            jpql = new StringBuilder("SELECT v FROM Video v, User u WHERE v.author.userId = u.userId ");
         } else {
-            jpql = new StringBuilder("SELECT v FROM Video v WHERE LOWER(v.title) LIKE LOWER(:query)");
+            jpql = new StringBuilder("SELECT v FROM Video v, User u WHERE v.author.userId = u.userId and LOWER(v.title) LIKE LOWER(:query)");
         }
 
         if (category != null && !category.isEmpty()) {
