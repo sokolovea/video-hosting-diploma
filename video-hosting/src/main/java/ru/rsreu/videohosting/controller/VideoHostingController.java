@@ -15,6 +15,7 @@ import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.dto.playlist.RatingUserProfileDto;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
+import ru.rsreu.videohosting.service.CycleDetectionService;
 import ru.rsreu.videohosting.service.UserService;
 import ru.rsreu.videohosting.util.RatingConverter;
 
@@ -34,6 +35,8 @@ public class VideoHostingController {
     private final JdbcRatingDao jdbcRatingDao;
     private final MultimediaClassRepository multimediaClassRepository;
 
+    private final CycleDetectionService cycleDetectionService;
+
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
                                   @Autowired VideoViewsRepository videoViewsRepository,
@@ -41,7 +44,8 @@ public class VideoHostingController {
                                   @Autowired UserService userService,
                                   @Autowired JdbcRatingDao jdbcRatingDao,
                                   @Autowired MultimediaClassRepository multimediaClassRepository,
-                                  @Autowired PlaylistRepository playlistRepository) {
+                                  @Autowired PlaylistRepository playlistRepository,
+                                  @Autowired CycleDetectionService cycleDetectionService) {
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
         this.videoViewsRepository = videoViewsRepository;
@@ -50,13 +54,13 @@ public class VideoHostingController {
         this.jdbcRatingDao = jdbcRatingDao;
         this.multimediaClassRepository = multimediaClassRepository;
         this.playlistRepository = playlistRepository;
+        this.cycleDetectionService = cycleDetectionService;
     }
 
     @GetMapping("/")
-    public String showAllMostPopularVideos(Model model) {
-        List<Video> videos = videoRepository.findAll();
-        model.addAttribute("videos", videos);
-        return "index";
+    public String showAllMostRelevantVideos() {
+        List<List<Long>> cycles = cycleDetectionService.findUserLikeCycles(1, 4);
+        return "redirect:/search?sortBy=relevance_user";
     }
 
     @GetMapping("/history_views")

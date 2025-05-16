@@ -372,7 +372,7 @@ public class MVCVideoHostingController {
 
     @GetMapping("/search")
     public String search(
-            @RequestParam("query") String query,
+            @RequestParam(value = "query", required = false) String query,
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "sortBy", defaultValue = "rating_expert") String sortBy,
             @RequestParam(value = "reverseOrder", required = false, defaultValue = "false") Boolean reverseOrder,
