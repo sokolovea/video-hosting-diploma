@@ -9,10 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class VideoGetAdminDto {
+public class IdRequestDto {
     private Long id;
-    private String title;
-    private String thumbnailPath;
-    private boolean blocked;
-    private String link;
 }

@@ -2,6 +2,7 @@ package ru.rsreu.videohosting.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.rsreu.videohosting.dto.RatingDto;
 import ru.rsreu.videohosting.dto.VideoGetAdminDto;
 import ru.rsreu.videohosting.entity.User;
@@ -85,20 +86,24 @@ public class VideoService {
                 video -> new VideoGetAdminDto(
                         video.getVideoId(),
                         video.getTitle(),
-                        video.getImagePath()
+                        video.getImagePath(),
+                        video.getIsBlocked(),
+                        "/video/" + String.valueOf(video.getVideoId())
                 )
         ).toList();
     }
 
+    @Transactional
     public void blockVideo(Long videoId) {
         if (videoId != null) {
-            videoRepository.updateBlockedStatus(videoId, false);
+            videoRepository.updateBlockedStatus(videoId, true);
         }
     }
 
+    @Transactional
     public void unblockVideo(Long videoId) {
         if (videoId != null) {
-            videoRepository.updateBlockedStatus(videoId, true);
+            videoRepository.updateBlockedStatus(videoId, false);
         }
     }
 }

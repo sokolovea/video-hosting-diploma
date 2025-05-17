@@ -10,9 +10,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-    private long userId;
+    private long id;
     private String login;
     private String email;
     private String roles;
-    private Boolean isBlocked;
+    private Boolean blocked;
+    private String link;
 }

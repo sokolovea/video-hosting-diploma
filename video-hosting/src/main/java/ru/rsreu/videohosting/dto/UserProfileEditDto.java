@@ -32,4 +32,6 @@ public class UserProfileEditDto {
     @NotBlank
     private String telephone;
     private MultipartFile imagePath;
+
+    private boolean isBlocked;
 }

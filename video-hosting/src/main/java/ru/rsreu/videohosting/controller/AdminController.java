@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.MutualLikePairWeight;
 import ru.rsreu.videohosting.dto.MutualMarkPairWeightDto;
@@ -44,6 +45,7 @@ public class AdminController {
     private final RoleRepository roleRepository;
     private final JdbcRatingDao jdbcRatingDao;
     private final BoostDetectionService boostDetectionService;
+    private final UserService userService;
 
 
     @Autowired
@@ -63,7 +65,8 @@ public class AdminController {
                                      @Autowired RoleRepository roleRepository,
                                      @Autowired JdbcRatingDao jdbcRatingDao,
                                      @Autowired SessionStatisticsController sessionStatisticsController,
-                                     @Autowired BoostDetectionService boostDetectionService) {
+                                     @Autowired BoostDetectionService boostDetectionService,
+                                     @Autowired UserService userService) {
         this.userVideoMarkRepository = videoMarkRepository;
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
@@ -82,6 +85,7 @@ public class AdminController {
         this.jdbcRatingDao = jdbcRatingDao;
         this.sessionStatisticsController = sessionStatisticsController;
         this.boostDetectionService = boostDetectionService;
+        this.userService = userService;
     }
 
     @GetMapping("/report")
@@ -130,6 +134,27 @@ public class AdminController {
     @GetMapping("/action")
     public String getActionPge() {
         return "admin_actions";
+    }
+
+    @PostMapping("/users/block")
+    public String blockOrUnblockUser(@RequestParam("userId") Long userId,
+                                     @RequestParam("action") String action,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            if ("block".equals(action)) {
+                userService.blockUser(userId);
+                redirectAttributes.addFlashAttribute("successMessage", "Пользователь успешно заблокирован.");
+            } else if ("unblock".equals(action)) {
+                userService.unblockUser(userId);
+                redirectAttributes.addFlashAttribute("successMessage", "Пользователь успешно разблокирован.");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Неизвестное действие.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Произошла ошибка: " + e.getMessage());
+        }
+
+        return "redirect:/profile/" + userId;
     }
 
 

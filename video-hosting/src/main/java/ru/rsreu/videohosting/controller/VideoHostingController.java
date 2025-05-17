@@ -102,7 +102,8 @@ public class VideoHostingController {
                 user.getEmail(),
                 user.getTelephone(),
                 user.getImagePath(),
-                user.getCreatedAt().toLocalDate()
+                user.getCreatedAt().toLocalDate(),
+                user.getIsBlocked()
         );
 
         List<RatingUserProfileDto> listUserRatings = RatingConverter.convertAndSort(mapUserRating);
@@ -125,7 +126,8 @@ public class VideoHostingController {
                 user.getPatronymic(),
                 user.getEmail(),
                 user.getTelephone(),
-                null
+                null,
+                user.getIsBlocked()
         );
 
         model.addAttribute("user", profileEditDto);
@@ -193,7 +195,8 @@ public class VideoHostingController {
                 user.getEmail(),
                 user.getTelephone(),
                 user.getImagePath(),
-                user.getCreatedAt().toLocalDate()
+                user.getCreatedAt().toLocalDate(),
+                user.getIsBlocked()
         );
 
         List<Playlist> playlists = playlistRepository.findByUser(user);

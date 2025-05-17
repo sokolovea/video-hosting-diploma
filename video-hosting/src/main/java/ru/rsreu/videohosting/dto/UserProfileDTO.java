@@ -21,4 +21,5 @@ public class UserProfileDTO {
     private String telephone;
     private String imagePath;
     private LocalDate createdAt;
+    private boolean isBlocked;
 }

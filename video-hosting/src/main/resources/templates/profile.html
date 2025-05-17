@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -81,6 +81,23 @@
                     <a th:href="@{/search(query=${''}, authorId=${user.id})}">Видео данного пользователя</a>
                     <div th:if="${isCurrentUserEquals}">
                         <a th:href="@{/profile/edit}">Редактировать профиль</a>
+                    </div>
+                    <!-- Условие отображения для администратора -->
+                    <div sec:authorize="hasRole('ADMIN')">
+                        <form th:action="@{/admin/users/block}" method="post">
+                            <input type="hidden" name="userId" th:value="${user.id}">
+                            <div>
+                                <p>Статус блокировки: <span th:text="${user.blocked ? 'Заблокирован' : 'Активен'}"></span></p>
+                                <button type="submit" name="action" th:value="block"
+                                        th:if="${!user.blocked}" class="block-button">
+                                    Заблокировать пользователя
+                                </button>
+                                <button type="submit" name="action" th:value="unblock"
+                                        th:if="${user.blocked}" class="unblock-button">
+                                    Разблокировать пользователя
+                                </button>
+                            </div>
+                        </form>
                     </div>
                     <table>
                         <thead>

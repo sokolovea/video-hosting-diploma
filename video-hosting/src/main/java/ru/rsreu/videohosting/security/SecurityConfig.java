@@ -45,6 +45,7 @@ public class SecurityConfig { //extends WebSecurityConfigurerAdapter // DEBUG
                         .antMatchers("/login", "/login/**", "/logout", "/logout/**",
                                 "/css/**", "/js/**", "/images/**").permitAll()
                         .antMatchers("/api/video/view").permitAll()
+                        .antMatchers("/api/admin/**").hasRole("ADMIN")
                         .antMatchers("/api/**").permitAll()
                         .antMatchers("/").permitAll()
                         .antMatchers("/video/**").permitAll()

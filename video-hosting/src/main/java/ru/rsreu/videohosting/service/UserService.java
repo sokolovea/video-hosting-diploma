@@ -120,7 +120,8 @@ public class UserService {
                         value.getLogin(),
                         value.getEmail(),
                         value.getRoleAssignments().toString(),
-                        value.getIsBlocked()
+                        value.getIsBlocked(),
+                        "/profile/" + String.valueOf(value.getUserId())
                 )
         ).toList();
     }

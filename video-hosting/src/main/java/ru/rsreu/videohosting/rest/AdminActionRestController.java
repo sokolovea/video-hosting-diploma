@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
+@CrossOrigin(origins = "*")
 public class AdminActionRestController {
 
     private final UserService userService;
@@ -39,14 +40,14 @@ public class AdminActionRestController {
     }
 
     @PostMapping("/users/block")
-    public ResponseEntity<Void> blockUser(@RequestBody BlockRequest request) {
-        userService.blockUser(request.getUserId());
+    public ResponseEntity<Void> blockUser(@RequestBody IdRequestDto request) {
+        userService.blockUser(request.getId());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/users/unblock")
-    public ResponseEntity<Void> unblockUser(@RequestBody BlockRequest request) {
-        userService.unblockUser(request.getUserId());
+    public ResponseEntity<Void> unblockUser(@RequestBody IdRequestDto request) {
+        userService.unblockUser(request.getId());
         return ResponseEntity.ok().build();
     }
 
@@ -59,14 +60,14 @@ public class AdminActionRestController {
     }
 
     @PostMapping("/videos/block")
-    public ResponseEntity<Void> blockVideo(@RequestBody BlockRequest request) {
-        videoService.blockVideo(request.getVideoId());
+    public ResponseEntity<Void> blockVideo(@RequestBody IdRequestDto request) {
+        videoService.blockVideo(request.getId());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/videos/unblock")
-    public ResponseEntity<Void> unblockVideo(@RequestBody BlockRequest request) {
-        videoService.unblockVideo(request.getVideoId());
+    public ResponseEntity<Void> unblockVideo(@RequestBody IdRequestDto request) {
+        videoService.unblockVideo(request.getId());
         return ResponseEntity.ok().build();
     }
 
@@ -90,35 +91,4 @@ public class AdminActionRestController {
 //        return ResponseEntity.ok().build();
 //    }
 
-    // DTO для запроса блокировки/разблокировки
-    public static class BlockRequest {
-        private Long userId;
-        private Long videoId;
-        private Long commentId;
-
-        // Геттеры и сеттеры
-        public Long getUserId() {
-            return userId;
-        }
-
-        public void setUserId(Long userId) {
-            this.userId = userId;
-        }
-
-        public Long getVideoId() {
-            return videoId;
-        }
-
-        public void setVideoId(Long videoId) {
-            this.videoId = videoId;
-        }
-
-        public Long getCommentId() {
-            return commentId;
-        }
-
-        public void setCommentId(Long commentId) {
-            this.commentId = commentId;
-        }
-    }
 }

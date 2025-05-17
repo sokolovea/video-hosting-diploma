@@ -8,6 +8,7 @@
     <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Управление блокировками</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <script th:src="@{/js/admin.js}"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,13 +24,6 @@
             margin-bottom: 20px;
         }
 
-        .form-inline {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
         .item-card {
             display: flex;
             justify-content: space-between;
@@ -39,6 +33,11 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: #f9f9f9;
+        }
+
+        .item-card.blocked {
+            background-color: #f8d7da;
+            color: #721c24;
         }
 
         .item-buttons {
@@ -62,6 +61,37 @@
             background-color: #28a745;
             color: white;
         }
+
+        /* Стили для секций */
+        section {
+            margin-bottom: 30px;
+        }
+
+        /* Стили для текстового поля поиска */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 5px rgba(0, 123, 255, 0.5);
+            outline: none;
+        }
+
+        /* Отступы между контейнерами и их оформление */
+        #userContainer, #videoContainer {
+            margin-top: 10px;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -70,147 +100,29 @@
 <div class="container">
     <section>
         <h2>Блокировка пользователей</h2>
+        <input type="text" id="userSearch" placeholder="Поиск пользователей..." oninput="filterUsers()">
         <div id="userContainer"></div>
     </section>
 
     <section>
         <h2>Блокировка видео</h2>
+        <input type="text" id="videoSearch" placeholder="Поиск видео..." oninput="filterVideos()">
         <div id="videoContainer"></div>
     </section>
 
-    <section>
-        <h2>Блокировка комментариев</h2>
-        <div id="commentContainer"></div>
-    </section>
 </div>
 
 <script>
     const apiBase = '/api/admin';
-
-    // Функции для работы с пользователями
-    async function fetchUsers() {
-        const response = await fetch(`${apiBase}/users`);
-        const users = await response.json();
-
-        const container = document.getElementById('userContainer');
-        container.innerHTML = '';
-
-        users.forEach(user => {
-            const card = document.createElement('div');
-            card.classList.add('item-card');
-            card.innerHTML = `
-        <span>${user.name} (${user.email})</span>
-        <div class="item-buttons">
-          <button class="block-button" onclick="blockUser(${user.id})">Заблокировать</button>
-          <button class="unblock-button" onclick="unblockUser(${user.id})">Разблокировать</button>
-        </div>
-      `;
-            container.appendChild(card);
-        });
-    }
-
-    async function blockUser(userId) {
-        await fetch(`${apiBase}/users/block`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
-        });
-        fetchUsers();
-    }
-
-    async function unblockUser(userId) {
-        await fetch(`${apiBase}/users/unblock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
-        });
-        fetchUsers();
-    }
-
-    // Функции для работы с видео
-    async function fetchVideos() {
-        const response = await fetch(`${apiBase}/videos`);
-        const videos = await response.json();
-
-        const container = document.getElementById('videoContainer');
-        container.innerHTML = '';
-
-        videos.forEach(video => {
-            const card = document.createElement('div');
-            card.classList.add('item-card');
-            card.innerHTML = `
-        <span>${video.title}</span>
-        <div class="item-buttons">
-          <button class="block-button" onclick="blockVideo(${video.id})">Заблокировать</button>
-          <button class="unblock-button" onclick="unblockVideo(${video.id})">Разблокировать</button>
-        </div>
-      `;
-            container.appendChild(card);
-        });
-    }
-
-    async function blockVideo(videoId) {
-        await fetch(`${apiBase}/videos/block`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoId })
-        });
-        fetchVideos();
-    }
-
-    async function unblockVideo(videoId) {
-        await fetch(`${apiBase}/videos/unblock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ videoId })
-        });
-        fetchVideos();
-    }
-
-    // Функции для работы с комментариями
-    async function fetchComments() {
-        const response = await fetch(`${apiBase}/comments`);
-        const comments = await response.json();
-
-        const container = document.getElementById('commentContainer');
-        container.innerHTML = '';
-
-        comments.forEach(comment => {
-            const card = document.createElement('div');
-            card.classList.add('item-card');
-            card.innerHTML = `
-        <span>${comment.text}</span>
-        <div class="item-buttons">
-          <button class="block-button" onclick="blockComment(${comment.id})">Заблокировать</button>
-          <button class="unblock-button" onclick="unblockComment(${comment.id})">Разблокировать</button>
-        </div>
-      `;
-            container.appendChild(card);
-        });
-    }
-
-    async function blockComment(commentId) {
-        await fetch(`${apiBase}/comments/block`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ commentId })
-        });
-        fetchComments();
-    }
-
-    async function unblockComment(commentId) {
-        await fetch(`${apiBase}/comments/unblock`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ commentId })
-        });
-        fetchComments();
-    }
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 
     // Инициализация
+    document.getElementById('userSearch').addEventListener('input', filterUsers);
+    document.getElementById('videoSearch').addEventListener('input', filterVideos);
+
     fetchUsers();
     fetchVideos();
-    fetchComments();
 </script>
+
 </body>
 </html>
