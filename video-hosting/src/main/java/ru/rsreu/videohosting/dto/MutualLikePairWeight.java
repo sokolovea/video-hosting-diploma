@@ -1,7 +1,8 @@
 package ru.rsreu.videohosting.dto;
 
 
-public interface MutualLikePair {
+public interface MutualLikePairWeight {
     long getUserA();
     long getUserB();
+    long getWeight();
 }

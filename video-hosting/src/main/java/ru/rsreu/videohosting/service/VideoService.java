@@ -3,6 +3,7 @@ package ru.rsreu.videohosting.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.rsreu.videohosting.dto.RatingDto;
+import ru.rsreu.videohosting.dto.VideoGetAdminDto;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
@@ -11,6 +12,7 @@ import ru.rsreu.videohosting.repository.*;
 import javax.persistence.EntityNotFoundException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -72,19 +74,32 @@ public class VideoService {
     public RatingDto getVideoRating(Long videoId) {
         RatingDto ratingDto = new RatingDto();
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
-//        if (optionalVideo.isPresent()) {
-//            Video video = optionalVideo.get();
-//            Long likesCountUser = userVideoMarkRepository.countByVideoAndMark (video, markRepository.findByName("LIKE").get());
-//            Long marksCountUser = userVideoMarkRepository.countByVideo(video);
-//
-//            Long likesCountExpert = userVideoMarkRepository.countByVideoAndMark();
-//            if (marksCount != 0) {
-//                return likesCount / (double)marksCount * 100;
-//            }
-//        }
+
         ratingDto.setRatingExpert(80.0);
         ratingDto.setRatingUser(90.0);
         return ratingDto;
+    }
+
+    public List<VideoGetAdminDto> getAllVideos() {
+        return videoRepository.findAll().stream().map(
+                video -> new VideoGetAdminDto(
+                        video.getVideoId(),
+                        video.getTitle(),
+                        video.getImagePath()
+                )
+        ).toList();
+    }
+
+    public void blockVideo(Long videoId) {
+        if (videoId != null) {
+            videoRepository.updateBlockedStatus(videoId, false);
+        }
+    }
+
+    public void unblockVideo(Long videoId) {
+        if (videoId != null) {
+            videoRepository.updateBlockedStatus(videoId, true);
+        }
     }
 }
 

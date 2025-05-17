@@ -1,6 +1,7 @@
 package ru.rsreu.videohosting.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.rsreu.videohosting.entity.MultimediaClass;
@@ -20,4 +21,8 @@ public interface VideoRepository extends JpaRepository<Video, Long>, VideoReposi
 
     @Query("SELECT count(v) FROM Video v WHERE v.author = :author AND :classificator MEMBER OF v.multimediaClasses")
     Long countAllByAuthorAndHavingClass(@Param("author") User author, @Param("classificator") MultimediaClass classificator);
+
+    @Modifying
+    @Query("UPDATE Video v SET v.isBlocked = :isBlocked WHERE v.videoId = :videoId")
+    void updateBlockedStatus(Long videoId, Boolean isBlocked);
 }

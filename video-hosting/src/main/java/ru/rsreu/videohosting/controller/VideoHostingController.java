@@ -1,5 +1,6 @@
 package ru.rsreu.videohosting.controller;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,7 +16,7 @@ import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.dto.playlist.RatingUserProfileDto;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
-import ru.rsreu.videohosting.service.CycleDetectionService;
+import ru.rsreu.videohosting.service.BoostDetectionService;
 import ru.rsreu.videohosting.service.UserService;
 import ru.rsreu.videohosting.util.RatingConverter;
 
@@ -35,7 +36,7 @@ public class VideoHostingController {
     private final JdbcRatingDao jdbcRatingDao;
     private final MultimediaClassRepository multimediaClassRepository;
 
-    private final CycleDetectionService cycleDetectionService;
+    private final BoostDetectionService boostDetectionService;
 
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
@@ -45,7 +46,7 @@ public class VideoHostingController {
                                   @Autowired JdbcRatingDao jdbcRatingDao,
                                   @Autowired MultimediaClassRepository multimediaClassRepository,
                                   @Autowired PlaylistRepository playlistRepository,
-                                  @Autowired CycleDetectionService cycleDetectionService) {
+                                  @Autowired BoostDetectionService boostDetectionService) {
         this.videoRepository = videoRepository;
         this.markRepository = markRepository;
         this.videoViewsRepository = videoViewsRepository;
@@ -54,12 +55,11 @@ public class VideoHostingController {
         this.jdbcRatingDao = jdbcRatingDao;
         this.multimediaClassRepository = multimediaClassRepository;
         this.playlistRepository = playlistRepository;
-        this.cycleDetectionService = cycleDetectionService;
+        this.boostDetectionService = boostDetectionService;
     }
 
     @GetMapping("/")
     public String showAllMostRelevantVideos() {
-        List<List<Long>> cycles = cycleDetectionService.findUserLikeCycles(1, 4);
         return "redirect:/search?sortBy=relevance_user";
     }
 

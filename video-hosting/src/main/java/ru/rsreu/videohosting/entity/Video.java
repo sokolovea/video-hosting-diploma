@@ -44,6 +44,9 @@ public class Video implements Serializable {
     @Column(updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "is_blocked")
+    private Boolean isBlocked;
+
     public String getImagePath() {
         return '/' + imagePath;
     }

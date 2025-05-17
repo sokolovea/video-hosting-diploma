@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Страница блокировки пользователей, видео и комментариев">
+    <meta th:name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Управление блокировками</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .item-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .item-buttons button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .block-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .unblock-button {
+            background-color: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+
+<div class="container">
+    <section>
+        <h2>Блокировка пользователей</h2>
+        <div id="userContainer"></div>
+    </section>
+
+    <section>
+        <h2>Блокировка видео</h2>
+        <div id="videoContainer"></div>
+    </section>
+
+    <section>
+        <h2>Блокировка комментариев</h2>
+        <div id="commentContainer"></div>
+    </section>
+</div>
+
+<script>
+    const apiBase = '/api/admin';
+
+    // Функции для работы с пользователями
+    async function fetchUsers() {
+        const response = await fetch(`${apiBase}/users`);
+        const users = await response.json();
+
+        const container = document.getElementById('userContainer');
+        container.innerHTML = '';
+
+        users.forEach(user => {
+            const card = document.createElement('div');
+            card.classList.add('item-card');
+            card.innerHTML = `
+        <span>${user.name} (${user.email})</span>
+        <div class="item-buttons">
+          <button class="block-button" onclick="blockUser(${user.id})">Заблокировать</button>
+          <button class="unblock-button" onclick="unblockUser(${user.id})">Разблокировать</button>
+        </div>
+      `;
+            container.appendChild(card);
+        });
+    }
+
+    async function blockUser(userId) {
+        await fetch(`${apiBase}/users/block`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
+        fetchUsers();
+    }
+
+    async function unblockUser(userId) {
+        await fetch(`${apiBase}/users/unblock`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
+        fetchUsers();
+    }
+
+    // Функции для работы с видео
+    async function fetchVideos() {
+        const response = await fetch(`${apiBase}/videos`);
+        const videos = await response.json();
+
+        const container = document.getElementById('videoContainer');
+        container.innerHTML = '';
+
+        videos.forEach(video => {
+            const card = document.createElement('div');
+            card.classList.add('item-card');
+            card.innerHTML = `
+        <span>${video.title}</span>
+        <div class="item-buttons">
+          <button class="block-button" onclick="blockVideo(${video.id})">Заблокировать</button>
+          <button class="unblock-button" onclick="unblockVideo(${video.id})">Разблокировать</button>
+        </div>
+      `;
+            container.appendChild(card);
+        });
+    }
+
+    async function blockVideo(videoId) {
+        await fetch(`${apiBase}/videos/block`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId })
+        });
+        fetchVideos();
+    }
+
+    async function unblockVideo(videoId) {
+        await fetch(`${apiBase}/videos/unblock`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId })
+        });
+        fetchVideos();
+    }
+
+    // Функции для работы с комментариями
+    async function fetchComments() {
+        const response = await fetch(`${apiBase}/comments`);
+        const comments = await response.json();
+
+        const container = document.getElementById('commentContainer');
+        container.innerHTML = '';
+
+        comments.forEach(comment => {
+            const card = document.createElement('div');
+            card.classList.add('item-card');
+            card.innerHTML = `
+        <span>${comment.text}</span>
+        <div class="item-buttons">
+          <button class="block-button" onclick="blockComment(${comment.id})">Заблокировать</button>
+          <button class="unblock-button" onclick="unblockComment(${comment.id})">Разблокировать</button>
+        </div>
+      `;
+            container.appendChild(card);
+        });
+    }
+
+    async function blockComment(commentId) {
+        await fetch(`${apiBase}/comments/block`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ commentId })
+        });
+        fetchComments();
+    }
+
+    async function unblockComment(commentId) {
+        await fetch(`${apiBase}/comments/unblock`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ commentId })
+        });
+        fetchComments();
+    }
+
+    // Инициализация
+    fetchUsers();
+    fetchVideos();
+    fetchComments();
+</script>
+</body>
+</html>

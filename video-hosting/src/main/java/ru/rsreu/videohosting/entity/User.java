@@ -62,6 +62,9 @@ public class User implements UserDetails {
     @Column(name = "is_admin")
     private Boolean isAdmin;
 
+    @Column(name = "is_blocked")
+    private Boolean isBlocked;
+
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RoleAssignment> roleAssignments = new HashSet<>();
 

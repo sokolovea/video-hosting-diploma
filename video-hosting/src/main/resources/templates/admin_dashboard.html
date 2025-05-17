@@ -1,70 +1,153 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админка</title>
+    <meta name="description" content="Страница администратора видеохостинга">
+    <title>Админ-панель</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .statistics {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .statistics div {
+            flex: 1;
+            padding: 10px;
+            margin: 5px;
+            text-align: center;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: #f4f4f4;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <h1>Панель администратора</h1>
-</header>
+<div class="container">
+    <h2>Статистика по видеохостингу</h2>
+    <div class="statistics">
+        <div>Всего пользователей: <span th:text="${totalUsers}"></span></div>
+        <div>Эксперты: <span th:text="${expertsCount}"></span></div>
+        <div>Видео: <span th:text="${totalVideos}"></span></div>
+        <div>Комментарии: <span th:text="${totalComments}"></span></div>
+    </div>
 
-<main>
-    <section>
-        <h2>Управление пользователями</h2>
+    <form th:action="@{/admin/report}" method="get">
+        <div class="form-group">
+            <label for="threshold" >Пороговое значение накрутки</label>
+            <input type="number" id="threshold" name="threshold" th:value="${threshold}" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="dataType">Тип данных</label>
+            <select id="dataType" name="dataType">
+                <option value="video" th:selected="${dataType == 'video'}" >По видео</option>
+                <option value="comment" th:selected="${dataType != 'video'}">По комментариям</option>
+                th:selected = ?
+            </select>
+        </div>
+        <button type="submit">Рассчитать</button>
+    </form>
+
+    <div class="table-container">
+        <h3>Прямые накрутки</h3>
         <table>
             <thead>
             <tr>
-                <th>ID</th>
-                <th>Логин</th>
-                <th>Email</th>
-                <th>Роль</th>
-                <th>Действия</th>
+                <th>Пользователь A</th>
+                <th>Пользователь B</th>
+                <th>Вес накрутки</th>
             </tr>
             </thead>
             <tbody>
-            <tr th:each="user : ${users}">
-                <td th:text="${user.userId}"></td>
-                <td th:text="${user.login}"></td>
-                <td th:text="${user.email}"></td>
-                <td th:text="${user.roles}"></td>
-                <td>
-                    <form th:action="@{/admin/toggle-block}" method="post">
-                        <input type="hidden" name="userId" th:value="${user.userId}">
-                        <button type="submit"
-                                th:text="${user.isBlocked} ? 'Разблокировать' : 'Заблокировать'"
-                                th:class="${user.isBlocked} ? 'unblock-btn' : 'block-btn'">
-                        </button>
-                    </form>
-                </td>
+            <tr th:each="entry : ${directBoosts}">
+                <td><a th:href="@{/profile/{id}(id=${entry.userA})}" th:text="${entry.userA}"></a></td>
+                <td><a th:href="@{/profile/{id}(id=${entry.userB})}" th:text="${entry.userB}"></a></td>
+                <td th:text="${entry.weight}"></td>
             </tr>
             </tbody>
         </table>
-    </section>
+    </div>
 
-    <section>
-        <h2>Анализ контента</h2>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-label">Всего видео:</span>
-                <span class="stat-value" th:text="${statistics.totalVideos}"></span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Всего комментариев:</span>
-                <span class="stat-value" th:text="${statistics.totalComments}"></span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Среднее комментариев/видео:</span>
-                <span class="stat-value" th:text="${#numbers.formatDecimal(statistics.avgComments, 1, 2)}"></span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Заблокировано пользователей:</span>
-                <span class="stat-value" th:text="${statistics.blockedUsers}"></span>
-            </div>
-        </div>
-    </section>
-</main>
+    <div class="table-container">
+        <h3>Циклические накрутки</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Цикл</th>
+                <th>Вес накрутки</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="cycle : ${cyclicBoosts}">
+                <td>
+                    <span th:each="id : ${cycle.left}" th:unless="${#lists.isEmpty(cycle.left)}">
+                        <a th:href="@{/profile/{id}(id=${id})}" th:text="${id}"></a>
+                        <span th:unless="${idStat.last}">, </span>
+                    </span>
+                </td>
+                <td th:text="${cycle.right}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 </body>
 </html>

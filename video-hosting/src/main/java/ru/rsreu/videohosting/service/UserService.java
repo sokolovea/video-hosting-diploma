@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.rsreu.videohosting.dto.RegistrationDTO;
+import ru.rsreu.videohosting.dto.UserDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.Role;
@@ -98,14 +99,29 @@ public class UserService {
         return userRepository.findByEmail(email).isPresent();
     }
 
-//    public User getCurrentUser() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        Long userId = 0L;
-//        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-//            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//            String username = userDetails.getUsername();
-//            userId = userRepository.findByLogin(username).get().getUserId();
-//        }
-//        return this.userRepository.getReferenceById(userId);
-//    }
+    @Transactional
+    public void blockUser(Long userId) {
+        if (userId != null) {
+            userRepository.updateBlockedStatus(userId, true);
+        }
+    }
+
+    @Transactional
+    public void unblockUser(Long userId) {
+        if (userId != null) {
+            userRepository.updateBlockedStatus(userId, false);
+        }
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(
+                value -> new UserDTO(
+                        value.getUserId(),
+                        value.getLogin(),
+                        value.getEmail(),
+                        value.getRoleAssignments().toString(),
+                        value.getIsBlocked()
+                )
+        ).toList();
+    }
 }
