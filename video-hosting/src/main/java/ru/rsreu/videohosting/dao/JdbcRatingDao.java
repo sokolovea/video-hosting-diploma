@@ -11,6 +11,7 @@ import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.repository.*;
+import ru.rsreu.videohosting.service.RedisService;
 
 import javax.sql.DataSource;
 import java.time.Duration;
@@ -25,6 +26,7 @@ public class JdbcRatingDao {
     private final UserCommentMarkRepository commentMarkRepository;
     private final UserRepository userRepository;
     private final UserVideoMarkRepository userVideoMarkRepository;
+
 
     private final String likesDislikesUserByVideoCount = """
             SELECT distinct count(*)
@@ -67,11 +69,22 @@ public class JdbcRatingDao {
     private final CommentRepository commentRepository;
     private final RoleRepository roleRepository;
     private final VideoViewsRepository videoViewsRepository;
+    private final RedisService redisService;
+
+    private final long userRoleId;
+    private final long expertRoleId;
+    private final long likeId;
 
     public JdbcRatingDao(@Autowired DataSource dataSource,
                          @Autowired MarkRepository markRepository,
                          @Autowired UserVideoMarkRepository videoMarkRepository,
-                         @Autowired UserCommentMarkRepository commentMarkRepository, UserRepository userRepository, UserVideoMarkRepository userVideoMarkRepository, VideoRepository videoRepository, CommentRepository commentRepository, RoleRepository roleRepository, VideoViewsRepository videoViewsRepository) {
+                         @Autowired UserCommentMarkRepository commentMarkRepository,
+                         @Autowired UserRepository userRepository,
+                         @Autowired UserVideoMarkRepository userVideoMarkRepository,
+                         @Autowired VideoRepository videoRepository,
+                         @Autowired CommentRepository commentRepository,
+                         @Autowired RoleRepository roleRepository,
+                         @Autowired VideoViewsRepository videoViewsRepository, RedisService redisService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.markRepository = markRepository;
         this.videoMarkRepository = videoMarkRepository;
@@ -82,11 +95,23 @@ public class JdbcRatingDao {
         this.commentRepository = commentRepository;
         this.roleRepository = roleRepository;
         this.videoViewsRepository = videoViewsRepository;
+        this.redisService = redisService;
+
+        this.userRoleId = roleRepository.findByRoleName("USER").get().getRoleId();
+        this.expertRoleId = roleRepository.findByRoleName("EXPERT").get().getRoleId();
+        this.likeId = markRepository.findByName("LIKE").get().getMarkId();
     }
 
     public Map<MultimediaClass, Double> getUserRating(User user, List<MultimediaClass> classifications) {
         HashMap<MultimediaClass, Double> userRating = new HashMap<>();
         for (MultimediaClass classification : classifications) {
+
+            Double cachedRating = redisService.getRatingUser(user.getUserId(), classification.getMultimediaClassId());
+            if (cachedRating != null) {
+                userRating.put(classification, cachedRating);
+                continue;
+            }
+
             Object[] paramsLikes = {user.getUserId(), "LIKE", classification.getMultimediaClassName()};
             Object[] paramsDislikes = {user.getUserId(), "DISLIKE", classification.getMultimediaClassName()};
 
@@ -114,51 +139,67 @@ public class JdbcRatingDao {
             }
             double finalRating = ratingByVideo * videosInClassCount * 0.9 + ratingByComments * commentsInClassCount * 0.1;
             userRating.put(classification, finalRating);
+
+            redisService.saveRatingUser(user.getUserId(), classification.getMultimediaClassId(), finalRating);
         }
         return userRating;
     }
 
     public Map<MultimediaClass, RatingDto> getVideoRating(Video video) {
 
-        Long likeId = markRepository.findByName("LIKE").get().getMarkId();
-
-        Long expertRoleId = roleRepository.findByRoleName("EXPERT").get().getRoleId();
-
         Set<MultimediaClass> classifications = video.getMultimediaClasses();
         HashMap<Long, CountSumDto> videoSumMarksByClasses = new HashMap<>();
 
+        boolean isDataCorrect = true;
         for (MultimediaClass classification : classifications) {
-            videoSumMarksByClasses.put(classification.getMultimediaClassId(),
-                    new CountSumDto(0L, 0L, 0L, 0L));
+            CountSumDto countSumDto = new CountSumDto();
+            countSumDto =  redisService.getRatingVideo(video.getVideoId(), classification.getMultimediaClassId());
+            if (countSumDto == null) {
+                countSumDto = new CountSumDto(0L, 0L, 0L, 0L);
+                isDataCorrect = false;
+            }
+            videoSumMarksByClasses.put(classification.getMultimediaClassId(), countSumDto);
         }
 
-        Object[] params = {video.getVideoId()};
-
-        List<VideoRatingDto> marksOnVideo = this.jdbcTemplate.query(
-                likesDislikesVideoByUserClasses,
-                params,
-                (rs, rowNum) -> new VideoRatingDto(
-                        rs.getLong("video_id"),
-                        rs.getLong("multimedia_class_id"),
-                        rs.getLong("role_id"),
-                        rs.getLong("mark_id"),
-                        rs.getLong("count")
-                )
-        );
-
-
-        for (VideoRatingDto videoRatingDto : marksOnVideo) {
-            boolean isExpert = Objects.equals(videoRatingDto.getRoleId(), expertRoleId);
-            Long positiveMark = Objects.equals(videoRatingDto.getMarkId(), likeId) ? 1L : 0L;
-            CountSumDto countSumDto = videoSumMarksByClasses.get(videoRatingDto.getMultimediaClassId());
-            if (isExpert) {
-                countSumDto.setCountExpert(countSumDto.getCountExpert() + 1);
-                countSumDto.setSumExpert(countSumDto.getSumExpert() + positiveMark);
-            } else {
-                countSumDto.setCountUser(countSumDto.getCountUser() + 1);
-                countSumDto.setSumUser(countSumDto.getSumUser() + positiveMark);
+        if (!isDataCorrect) {
+            videoSumMarksByClasses.clear();
+            for (MultimediaClass classification : classifications) {
+                videoSumMarksByClasses.put(classification.getMultimediaClassId(),
+                        new CountSumDto(0L, 0L, 0L, 0L));
             }
-            videoSumMarksByClasses.put(videoRatingDto.getMultimediaClassId(), countSumDto);
+
+            Object[] params = {video.getVideoId()};
+
+            List<VideoRatingDto> marksOnVideo = this.jdbcTemplate.query(
+                    likesDislikesVideoByUserClasses,
+                    params,
+                    (rs, rowNum) -> new VideoRatingDto(
+                            rs.getLong("video_id"),
+                            rs.getLong("multimedia_class_id"),
+                            rs.getLong("role_id"),
+                            rs.getLong("mark_id"),
+                            rs.getLong("count")
+                    )
+            );
+
+
+            for (VideoRatingDto videoRatingDto : marksOnVideo) {
+                boolean isExpert = Objects.equals(videoRatingDto.getRoleId(), expertRoleId);
+                Long positiveMark = Objects.equals(videoRatingDto.getMarkId(), likeId) ? 1L : 0L;
+                CountSumDto countSumDto = videoSumMarksByClasses.get(videoRatingDto.getMultimediaClassId());
+                if (isExpert) {
+                    countSumDto.setCountExpert(countSumDto.getCountExpert() + 1);
+                    countSumDto.setSumExpert(countSumDto.getSumExpert() + positiveMark);
+                } else {
+                    countSumDto.setCountUser(countSumDto.getCountUser() + 1);
+                    countSumDto.setSumUser(countSumDto.getSumUser() + positiveMark);
+                }
+                videoSumMarksByClasses.put(videoRatingDto.getMultimediaClassId(), countSumDto);
+            }
+            for (MultimediaClass classification : classifications) {
+                redisService.saveRatingVideo(video.getVideoId(), classification.getMultimediaClassId(),
+                        videoSumMarksByClasses.get(classification.getMultimediaClassId()));
+            }
         }
 
         HashMap<MultimediaClass, RatingDto> videoRatingByClasses = new HashMap<>();
@@ -180,6 +221,20 @@ public class JdbcRatingDao {
 
         for (MultimediaClass multimediaClass : videoRatingByClasses.keySet()) {
 
+            String cacheKey = "video:relevance:" + video.getVideoId() + ":" + multimediaClass.getMultimediaClassId();
+
+            // Попытка достать из кеша
+            RelevanceDTO cachedRelevance = new RelevanceDTO();
+            cachedRelevance.setRelevanceUser(redisService.getRelevanceVideo(video.getVideoId(),
+                    multimediaClass.getMultimediaClassId(), userRoleId));
+            cachedRelevance.setRelevanceUser(redisService.getRelevanceVideo(video.getVideoId(),
+                    multimediaClass.getMultimediaClassId(), expertRoleId));
+
+            if (cachedRelevance.getRelevanceUser() != null && cachedRelevance.getRelevanceExpert() != null) {
+                resultVideoRelevance.put(multimediaClass, cachedRelevance);
+                continue;
+            }
+
             RatingDto ratingDto = videoRatingByClasses.get(multimediaClass);
             double ratingUser =  ratingDto.getRatingUser() == null ? 0 : ratingDto.getRatingUser();
             double ratingExpert = ratingDto.getRatingExpert() == null ? 0 :ratingDto.getRatingExpert();
@@ -195,6 +250,9 @@ public class JdbcRatingDao {
             double scoreExpert = alpha * ratingExpert + beta * V + gamma * F;
 
             resultVideoRelevance.put(multimediaClass, new RelevanceDTO(scoreUser, scoreExpert));
+
+            redisService.saveRelevanceVideo(video.getVideoId(), multimediaClass.getMultimediaClassId(), scoreUser, userRoleId);
+            redisService.saveRelevanceVideo(video.getVideoId(), multimediaClass.getMultimediaClassId(), scoreExpert, expertRoleId);
         }
         return resultVideoRelevance;
     }

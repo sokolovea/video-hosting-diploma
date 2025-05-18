@@ -1,5 +1,6 @@
 package ru.rsreu.videohosting.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 @Data
@@ -13,6 +14,7 @@ public class CountSumDto {
     private Long countUser;
     private Long countExpert;
 
+    @JsonIgnore
     public RatingDto getRatingDto() {
         RatingDto dto = new RatingDto();
         dto.setRatingUser(countUser == null || countUser == 0 ? null : sumUser / (double) countUser);

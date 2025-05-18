@@ -188,6 +188,7 @@ public class MVCVideoHostingController {
 
         if (optionalUser.isPresent()) {
             video.setAuthor(optionalUser.get());
+            video.setIsBlocked(false);
             videoRepository.save(video);
             return String.format("redirect:/video/%d", video.getVideoId());
         }
