@@ -3,18 +3,15 @@ package ru.rsreu.videohosting.controller;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.MutualLikePairWeight;
-import ru.rsreu.videohosting.dto.MutualMarkPairWeightDto;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.service.*;
 
-import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,10 +85,15 @@ public class AdminController {
         this.userService = userService;
     }
 
+    @GetMapping
+    public String adminMainPage(Model model) {
+        return "admin_main";
+    }
+
     @GetMapping("/report")
-    public String adminPanel(Model model,
-                             @RequestParam(name = "threshold", defaultValue = "10") Long threshold,
-                             @RequestParam(name="dataType", defaultValue = "video") String dataType) {
+    public String adminReport(Model model,
+                              @RequestParam(name = "threshold", defaultValue = "10") Long threshold,
+                              @RequestParam(name="dataType", defaultValue = "video") String dataType) {
         // Получаем общую статистику
         long totalUsers = userRepository.count();
         long expertsCount = userRepository.countExperts();

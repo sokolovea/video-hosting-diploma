@@ -91,12 +91,15 @@
                           th:if="${#fields.hasErrors('classesString')}"
                           th:errors="*{classesString}"></span>
                 </div>
-                <button class="submit-button" type="submit" style="max-width: 150px" th:value="@{submitButtonName}"></button>
+                <button class="submit-button" type="submit" style="max-width: 150px" th:text="${submitButtonName}"></button>
             </form>
-            <form th:action="@{/video/}" th:method="delete">
-                <input type="hidden" name="videoId" th:value="${video.videoId}"/>
-                <button type="submit">Удалить видео</button>
-            </form>
+            <br>
+            <div th:if="${formName == 'Редактирование видео'}">
+                <form th:action="@{/video/}" th:method="delete">
+                    <input type="hidden" name="videoId" th:value="${video.videoId}"/>
+                    <button type="submit" style="max-width: 150px" >Удалить видео</button>
+                </form>
+            </div>
         </div>
     </section>
 </main>

@@ -260,7 +260,20 @@ public class MVCVideoHostingController {
         videoMarkRepository.deleteByVideo(video);
         commentRepository.deleteByVideo(video);
         videoViewsRepository.deleteByVideo(video);
+        String imagePath = video.getImagePath();
+        String videoPath = video.getVideoPath();
         videoRepository.delete(video);
+
+        try {
+            if (videoPath != null) {
+                storageService.deleteFile(videoPath);
+            }
+            if (imagePath != null) {
+                storageService.deleteFile(imagePath);
+            }
+        } catch (RuntimeException e) {
+            System.out.println("Ошибка удаления видео: " + video.getVideoPath());
+        }
         redirectAttributes.addFlashAttribute("success", "Удаление видео произведено успешно!");
         return "redirect:/profile";
     }

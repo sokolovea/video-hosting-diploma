@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ошибка 403</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+<section class="other-section">
+    <div class="container">
+        <h2>Ошибка 403</h2>
+        <p>У вас нет прав для доступа к этой странице.</p>
+        <a th:href="@{/}" class="btn">На главную</a>
+    </div>
+</section>
+<div th:replace="fragments/footer.html"></div>
+</body>
+</html>

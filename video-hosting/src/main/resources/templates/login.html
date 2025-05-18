@@ -6,12 +6,18 @@
 </head>
 <body>
 <div th:replace="fragments/header.html"></div>
-<div th:if="${param.error}" class="auth-error">
-    <p class="validationError">Неверный логин или пароль</p>
-</div>
 <section class="registration-section">
     <div class="container">
         <h2>Вход</h2>
+        <div th:if="${param.error}" class="auth-error">
+            <div th:if="${param.error[0] == 'blocked'}"> <!-- Используем [0] и == -->
+                <p class="validationError">Ваш аккаунт заблокирован</p>
+            </div>
+            <div th:if="${param.error[0] == 'true'}"> <!-- Используем [0] и == -->
+                <p class="validationError">Неверный логин или пароль</p>
+            </div>
+        </div>
+
         <form th:action="@{/login}" method="post">
             <div class="form-group">
                 <label for="username">Логин:</label>

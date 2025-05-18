@@ -13,7 +13,7 @@
             padding: 0;
             background-color: #f4f4f4;
         }
-        .container {
+        .container-dashboard {
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
@@ -81,6 +81,8 @@
     </style>
 </head>
 <body>
+<div th:replace="fragments/header.html"></div>
+<section class="other-section">
 <div class="container">
     <h2>Статистика по видеохостингу</h2>
     <div class="statistics">
@@ -149,5 +151,7 @@
         </table>
     </div>
 </div>
+</section>
 </body>
+<div th:replace="fragments/footer.html"></div>
 </html>

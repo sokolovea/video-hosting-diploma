@@ -65,6 +65,19 @@ public class StorageService {
         }
     }
 
+    public Path resolvePath(String filePath) {
+        return Paths.get(filePath).toAbsolutePath().normalize();
+    }
+
+    public boolean deleteFile(String filePath) {
+        try {
+            Path path = resolvePath(filePath);
+            return Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка удаления файла: " + e.getMessage(), e);
+        }
+    }
+
 
     @Bean
     public MultipartConfigElement multipartConfigElement() {

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Панель администратора">
+    <title>Админка</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .admin-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .admin-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .admin-buttons a {
+            display: block;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-button {
+            background-color: #007bff;
+        }
+
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+
+        .report-button {
+            background-color: #28a745;
+        }
+
+        .report-button:hover {
+            background-color: #1e7e34;
+        }
+
+    </style>
+</head>
+<body>
+<div th:replace="fragments/header.html"></div>
+<section class="other-section">
+<div class="admin-container">
+    <h1>Панель администратора</h1>
+    <div class="admin-buttons">
+        <a th:href="@{/admin/report}" class="report-button">Посмотреть отчёты</a>
+        <a th:href="@{/admin/action}" class="action-button">Перейти к блокировкам</a>
+    </div>
+</div>
+</section>
+</body>
+<div th:replace="fragments/footer.html"></div>
+</html>

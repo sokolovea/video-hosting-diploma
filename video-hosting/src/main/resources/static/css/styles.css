@@ -312,7 +312,7 @@ h2 {
     text-align: center;
 }
 
-.registration-section, .profile-section {
+.registration-section, .profile-section, .other-section {
     margin: 20px 0;
     /*max-width: 400px; !* Установите максимальную ширину формы *!*/
     flex-grow: 1; /* Заполняет оставшееся пространство */

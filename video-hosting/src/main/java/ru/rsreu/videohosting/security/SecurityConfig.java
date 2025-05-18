@@ -54,6 +54,8 @@ public class SecurityConfig { //extends WebSecurityConfigurerAdapter // DEBUG
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/")
+                        .failureHandler(new CustomAuthenticationFailureHandler())
+                        .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

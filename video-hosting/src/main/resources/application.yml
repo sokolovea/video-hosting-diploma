@@ -24,11 +24,11 @@ spring:
       resolve-lazily: true
       file-size-threshold: 10000MB
       location: ${java.io.tmpdir}
-#  session:
-#    store-type: redis
-#  redis:
-#    host: localhost
-#    port: 6379
+  session:
+    store-type: redis
+  redis:
+    host: localhost
+    port: 6380
   config:
     import: "classpath:keys.yml"
   messages:
