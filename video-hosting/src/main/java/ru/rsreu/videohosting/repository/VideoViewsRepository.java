@@ -9,7 +9,6 @@ import ru.rsreu.videohosting.entity.Video;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public interface VideoViewsRepository extends JpaRepository<VideoViews, Long> {
     List<VideoViews> findByUserOrderByViewedAtDesc(User user);

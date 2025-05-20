@@ -70,12 +70,14 @@
                 </div>
                 <div class="profile-details">
                     <p><strong>Логин:</strong> <span th:text="${user.login}"></span></p>
-                    <p><strong>Имя:</strong> <span class="editable" id="name" th:text="${user.name}"></span></p>
-                    <p><strong>Фамилия:</strong> <span class="editable" id="surname" th:text="${user.surname}"></span></p>
-                    <p><strong>Отчество:</strong> <span class="editable" id="patronymic" th:text="${user.patronymic}"></span></p>
-                    <div th:if="${isCurrentUserEquals}">
-                        <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
-                        <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
+                    <div sec:authorize="isAuthenticated()">
+                        <p><strong>Имя:</strong> <span class="editable" id="name" th:text="${user.name}"></span></p>
+                        <p><strong>Фамилия:</strong> <span class="editable" id="surname" th:text="${user.surname}"></span></p>
+                        <p><strong>Отчество:</strong> <span class="editable" id="patronymic" th:text="${user.patronymic}"></span></p>
+                        <div th:if="${isCurrentUserEquals}">
+                            <p><strong>Email:</strong> <span class="editable" id="email" th:text="${user.email}"></span></p>
+                            <p><strong>Телефон:</strong> <span class="editable" id="telephone" th:text="${user.telephone}"></span></p>
+                        </div>
                     </div>
                     <p><strong>Дата регистрации:</strong> <span th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}"></span></p>
                     <a th:href="@{/search(query=${''}, authorId=${user.id})}">Видео данного пользователя</a>
@@ -104,6 +106,7 @@
                         <tr>
                             <th>Категория</th>
                             <th>Рейтинг</th>
+                            <th>Роль</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -112,6 +115,8 @@
                             <td th:text="${#numbers.formatDecimal(rating.rating, 1, 2)}"
                                 th:class="${rating.rating >= 1 ? 'positive-rating' : (rating.rating <= -1 ? 'negative-rating' : 'neutral-rating')}">
                                 <span th:if="${rating.rating > 0}">+</span><span th:text="${rating.rating}"></span>
+                            </td>
+                            <td th:text="${rolesByClasses.containsKey(rating.categoryName) ? 'Эксперт' : 'Пользователь'}"></td>
                             </td>
                         </tr>
                         </tbody>

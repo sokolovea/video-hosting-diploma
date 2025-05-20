@@ -33,8 +33,5 @@ public class RoleAssignment implements Serializable {
 
     @Column(updatable = false)
     private LocalDateTime assignedAt = LocalDateTime.now();
-
-    @Column(name = "is_fixed")
-    private boolean isFixed = false;
 }
 

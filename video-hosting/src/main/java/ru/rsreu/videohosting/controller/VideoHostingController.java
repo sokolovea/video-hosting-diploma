@@ -1,6 +1,6 @@
 package ru.rsreu.videohosting.controller;
 
-import org.apache.commons.lang3.tuple.Pair;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
+import ru.rsreu.videohosting.dto.IStringBooleanDto;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
 import ru.rsreu.videohosting.dto.UserProfileEditDto;
 import ru.rsreu.videohosting.dto.playlist.RatingUserProfileDto;
@@ -23,11 +24,11 @@ import ru.rsreu.videohosting.util.RatingConverter;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class VideoHostingController {
-    private final VideoRepository videoRepository;
-    private final MarkRepository markRepository;
+
     private final VideoViewsRepository videoViewsRepository;
     private final UserRepository userRepository;
     private final UserService userService;
@@ -36,7 +37,7 @@ public class VideoHostingController {
     private final JdbcRatingDao jdbcRatingDao;
     private final MultimediaClassRepository multimediaClassRepository;
 
-    private final BoostDetectionService boostDetectionService;
+    private final RoleAssignmentRepository roleAssignmentRepository;
 
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
@@ -46,16 +47,14 @@ public class VideoHostingController {
                                   @Autowired JdbcRatingDao jdbcRatingDao,
                                   @Autowired MultimediaClassRepository multimediaClassRepository,
                                   @Autowired PlaylistRepository playlistRepository,
-                                  @Autowired BoostDetectionService boostDetectionService) {
-        this.videoRepository = videoRepository;
-        this.markRepository = markRepository;
+                                  @Autowired BoostDetectionService boostDetectionService, RoleAssignmentRepository roleAssignmentRepository) {
         this.videoViewsRepository = videoViewsRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.jdbcRatingDao = jdbcRatingDao;
         this.multimediaClassRepository = multimediaClassRepository;
         this.playlistRepository = playlistRepository;
-        this.boostDetectionService = boostDetectionService;
+        this.roleAssignmentRepository = roleAssignmentRepository;
     }
 
     @GetMapping("/")
@@ -73,7 +72,7 @@ public class VideoHostingController {
     @GetMapping("/profile/{userId}")
     public String profile(Model model, Principal principal,
                           @PathVariable(required = false) Long userId) {
-        String username = principal.getName();
+        String username = principal == null ? null : principal.getName();
         Optional <User> optionalUser = Optional.empty();
         if (username != null) {
             optionalUser = userRepository.findByLogin(username);
@@ -108,14 +107,23 @@ public class VideoHostingController {
 
         List<RatingUserProfileDto> listUserRatings = RatingConverter.convertAndSort(mapUserRating);
 
+        List<IStringBooleanDto> rawResults = roleAssignmentRepository.findExpertCategoriesByReceiver(user);
+
+        Map<String, Boolean> rolesByClasses =  rawResults.stream()
+                .collect(Collectors.toMap(
+                        IStringBooleanDto::getString,
+                        IStringBooleanDto::getBoolean
+                ));
+
         model.addAttribute("user", profileDto);
         model.addAttribute("ratings", listUserRatings);
+        model.addAttribute("rolesByClasses", rolesByClasses);
         return "profile";
     }
 
     @GetMapping("/profile/edit")
     public String profileEdit(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = principal == null ? null : principal.getName();
         User user = userRepository.findByLogin(username).get();
         UserProfileEditDto profileEditDto = new UserProfileEditDto(
                 user.getUserId(),
@@ -136,7 +144,7 @@ public class VideoHostingController {
 
     @GetMapping("/profile")
     public String profile(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = principal == null ? null : principal.getName();
         if (username == null || username.isEmpty()) {
             return "redirect:/404";
         }
@@ -183,9 +191,8 @@ public class VideoHostingController {
 
     @GetMapping("/playlist")
     public String playlist(Model model, Principal principal) {
-        String username = principal.getName();
+        String username = principal == null ? null : principal.getName();
         User user = userRepository.findByLogin(username).get();
-//        var a = jdbcRatingDao.getUserRating(user, multimediaClassRepository.getAllMultimediaClasses()); //DEBUG
         UserProfileDTO profileDto = new UserProfileDTO(
                 user.getUserId(),
                 user.getLogin(),
@@ -200,19 +207,11 @@ public class VideoHostingController {
         );
 
         List<Playlist> playlists = playlistRepository.findByUser(user);
-//        for (Playlist playlist : playlists) {
-//            playlist.setAllVideos(videoRepository.findVideosByPlaylist(playlist));
-//        }
+
         model.addAttribute("playlists", playlists);
         model.addAttribute("user", profileDto);
         model.addAttribute("selectedPlaylist", new Playlist());
         return "playlist";
     }
-
-//    @GetMapping("/search")
-//    public String searchPage(Model model) {
-//        return "search";
-//    }
-
 
 }

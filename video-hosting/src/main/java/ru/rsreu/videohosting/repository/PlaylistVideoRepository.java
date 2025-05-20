@@ -3,7 +3,6 @@ package ru.rsreu.videohosting.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.PlaylistVideo;

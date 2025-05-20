@@ -12,63 +12,48 @@ import ru.rsreu.videohosting.dto.CommentRequestDTO;
 import ru.rsreu.videohosting.dto.CommentResponseDTO;
 import ru.rsreu.videohosting.dto.MarkStatisticsDTO;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
-import ru.rsreu.videohosting.dto.playlist.PlayListVideoDto;
 import ru.rsreu.videohosting.dto.playlist.PlaylistJsonDto;
 import ru.rsreu.videohosting.entity.*;
 import ru.rsreu.videohosting.repository.*;
-import ru.rsreu.videohosting.service.StorageService;
 import ru.rsreu.videohosting.service.VideoService;
 import ru.rsreu.videohosting.util.JacksonUtil;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.transaction.Transactional;
 import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/api/video", produces = "application/json")
-//@CrossOrigin(origins = {"http://localhost:8082"}) // DEBUG
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:8082"})
+//@CrossOrigin(origins = "*")
 public class VideoHostingRestController {
     private static final Logger log = LoggerFactory.getLogger(VideoHostingRestController.class);
 
-    private final MultimediaClassRepository multimediaClassRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final MarkRepository markRepository;
     private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
-    private final StorageService storageService;
     private final VideoService videoService;
     private final UserVideoMarkRepository userVideoMarkRepository;
-    private final RoleRepository roleRepository;
     private final PlaylistVideoRepository playlistVideoRepository;
-    private final PlaylistRepository playlistRepository;
 
     public VideoHostingRestController(@Autowired UserRepository userRepository,
-                                      @Autowired MultimediaClassRepository multimediaClassRepository,
                                       @Autowired VideoRepository videoRepository,
                                       @Autowired CommentRepository commentRepository,
                                       @Autowired MarkRepository markRepository,
                                       @Autowired UserCommentMarkRepository commentMarkRepository,
-                                      @Autowired StorageService storageService,
                                       @Autowired VideoService videoService,
                                       @Autowired UserVideoMarkRepository userVideoMarkRepository,
-                                      @Autowired RoleRepository roleRepository,
-                                      @Autowired PlaylistVideoRepository playlistVideoRepository,
-                                      @Autowired PlaylistRepository playlistRepository) {
+                                      @Autowired PlaylistVideoRepository playlistVideoRepository) {
         this.userRepository = userRepository;
-        this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.markRepository = markRepository;
-        this.storageService = storageService;
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoService = videoService;
         this.userVideoMarkRepository = userVideoMarkRepository;
-        this.roleRepository = roleRepository;
-        this.playlistRepository = playlistRepository;
         this.playlistVideoRepository = playlistVideoRepository;
     }
 
@@ -163,7 +148,7 @@ public class VideoHostingRestController {
         comment.setText(commentText.getCommentText());
         comment.setVideo(videoOptional.get());
         comment.setUser(userOptional.get());
-        comment.setIsModified(false);
+        comment.setIsBlocked(false);
 
         commentRepository.save(comment);
         return ResponseEntity.status(HttpStatus.CREATED).body("{}");
@@ -256,13 +241,11 @@ public class VideoHostingRestController {
                         } catch (JsonProcessingException e) {
                             throw new RuntimeException(e);
                         }
-                    }, // ключ - ID комментария
-                    Map.Entry::getValue,                                   // значение - список комментариев
-                    (oldValue, newValue) -> oldValue,                      // функция слияния для дубликатов
-                    TreeMap::new                                           // конкретная реализация SortedMap
+                    },
+                    Map.Entry::getValue,
+                    (oldValue, newValue) -> oldValue,
+                    TreeMap::new
             ));
-
-
 
 
         String json = null;
@@ -316,16 +299,6 @@ public class VideoHostingRestController {
         }
 
         return tree;
-
-//        return tree.entrySet().stream()
-//                .collect(Collectors.toMap(
-//                        entry -> convertToDTO(entry.getKey()), // Преобразование ключа (Comment -> CommentResponseDTO)
-//                        entry -> entry.getValue().stream()     // Преобразование списка значений (List<Comment> -> List<CommentResponseDTO>)
-//                                .map(this::convertToDTO)           // Преобразование каждого Comment в CommentResponseDTO
-//                                .collect(Collectors.toList()),    // Сбор в List<CommentResponseDTO>
-//                        (oldValue, newValue) -> oldValue,     // Слияние дубликатов (не нужно в этом случае)
-//                        TreeMap::new                          // Указываем, что результат должен быть TreeMap
-//                ));
     }
 
     @GetMapping("/{videoId}/playlists")

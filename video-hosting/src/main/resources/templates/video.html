@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,8 +76,6 @@
                             <ul id="userPlaylists"></ul>
                         </div>
                     </div>
-
-
                 </div>
 
                 <div class="video-description" th:text="${video.description}">
@@ -113,6 +111,9 @@
                                 <button type="submit" class="comment-like-button" th:data-mark-id="${dislikeId}">👎</button>
                                 <span class="comment-dislike-count" th:text="${entry.key.getDislikesCount()}">0</span>
                             </form>
+                            <div sec:authorize="hasRole('ADMIN')">
+                                <button type="button" class="subscribe-button" th:onclick="'blockComment(' + ${entry.key.getCommentId()} + ')'">Удалить комментарий</button>
+                            </div>
                             <button class="reply-button" th:attr="data-comment-id=${entry.key.getCommentId()}" onclick="toggleReplyForm(this)">Ответить</button>
                         </div>
                     </div>
@@ -146,6 +147,9 @@
                                     <button type="submit" class="comment-like-button" th:data-mark-id="${dislikeId}">👎</button>
                                     <span class="comment-dislike-count" th:text="${reply.getDislikesCount()}">0</span>
                                 </form>
+                                <div sec:authorize="hasRole('ADMIN')">
+                                    <button type="button" class="subscribe-button" th:onclick="'blockComment(' + ${entry.key.getCommentId()} + ')'">Удалить комментарий</button>
+                                </div>
                                 <button class="reply-button" onclick="toggleReplyForm(this)">Ответить</button>
                                 <div class="reply-form" style="display: none;">
                                     <form th:data-parent-id="${reply.getCommentId()}" th:action="@{/api/video/{videoId}/comment(videoId=${video.getVideoId()})}" method="post">

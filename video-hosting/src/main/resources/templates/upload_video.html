@@ -52,6 +52,10 @@
     <section class="upload-section">
         <div class="container">
             <h2 th:text="${formName}"></h2>
+            <div th:if="${blocked != null}" class="auth-error">
+                <p class="validationError">Видео заблокировано администратором!</p>
+                <p class="validationError">Вам предлагается исправить его</p>
+            </div>
             <form class="upload-form" th:action="@{/upload_video}" th:object="${video}" method="post" enctype="multipart/form-data">
                 <input type="hidden" id="videoId" name="videoId" th:field="*{videoId}">
                 <div class="form-group">

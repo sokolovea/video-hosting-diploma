@@ -3,9 +3,9 @@ package ru.rsreu.videohosting.rest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.rsreu.videohosting.dto.*;
-import ru.rsreu.videohosting.dto.playlist.PlayListVideoDto;
-import ru.rsreu.videohosting.entity.Video;
+import ru.rsreu.videohosting.dto.IdRequestDto;
+import ru.rsreu.videohosting.dto.UserDTO;
+import ru.rsreu.videohosting.dto.VideoGetAdminDto;
 import ru.rsreu.videohosting.service.CommentService;
 import ru.rsreu.videohosting.service.UserService;
 import ru.rsreu.videohosting.service.VideoService;
@@ -31,7 +31,6 @@ public class AdminActionRestController {
         this.commentService = commentService;
     }
 
-    // === Пользователи ===
 
     @GetMapping("/users")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -51,7 +50,6 @@ public class AdminActionRestController {
         return ResponseEntity.ok().build();
     }
 
-    // === Видео ===
 
     @GetMapping("/videos")
     public ResponseEntity<List<VideoGetAdminDto>> getAllVideos() {
@@ -71,19 +69,13 @@ public class AdminActionRestController {
         return ResponseEntity.ok().build();
     }
 
-    // === Комментарии ===
+//    DEBUG
+    @PostMapping("/comments/block")
+    public ResponseEntity<Void> blockComment(@RequestBody IdRequestDto request) {
+        commentService.blockComment(request.getId());
+        return ResponseEntity.ok().build();
+    }
 
-//    @GetMapping("/comments")
-//    public ResponseEntity<List<CommentResponseDTO>> getAllComments() {
-//        List<CommentResponseDTO> comments = commentService.getAllComments();
-//        return ResponseEntity.ok(comments);
-//    }
-
-//    @PostMapping("/comments/block")
-//    public ResponseEntity<Void> blockComment(@RequestBody BlockRequest request) {
-//        commentService.blockComment(request.getCommentId());
-//        return ResponseEntity.ok().build();
-//    }
 //
 //    @PostMapping("/comments/unblock")
 //    public ResponseEntity<Void> unblockComment(@RequestBody BlockRequest request) {

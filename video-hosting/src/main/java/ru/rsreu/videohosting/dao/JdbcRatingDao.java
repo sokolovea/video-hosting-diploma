@@ -67,7 +67,6 @@ public class JdbcRatingDao {
 
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
-    private final RoleRepository roleRepository;
     private final VideoViewsRepository videoViewsRepository;
     private final RedisService redisService;
 
@@ -93,7 +92,6 @@ public class JdbcRatingDao {
         this.userVideoMarkRepository = userVideoMarkRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
-        this.roleRepository = roleRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.redisService = redisService;
 
@@ -125,7 +123,6 @@ public class JdbcRatingDao {
             if (marksAssignedToUserVideoCount != 0) {
                 ratingByVideo = likesOnUserVideos / (double) marksAssignedToUserVideoCount - 0.5;
             }
-
 
             Long likesOnUserComments = this.jdbcTemplate.queryForObject(likesDislikesUserByCommentsCount,
                     paramsLikes, Long.class);
@@ -186,13 +183,14 @@ public class JdbcRatingDao {
             for (VideoRatingDto videoRatingDto : marksOnVideo) {
                 boolean isExpert = Objects.equals(videoRatingDto.getRoleId(), expertRoleId);
                 Long positiveMark = Objects.equals(videoRatingDto.getMarkId(), likeId) ? 1L : 0L;
+                Long countMarks = videoRatingDto.getCount_mark();
                 CountSumDto countSumDto = videoSumMarksByClasses.get(videoRatingDto.getMultimediaClassId());
                 if (isExpert) {
-                    countSumDto.setCountExpert(countSumDto.getCountExpert() + 1);
-                    countSumDto.setSumExpert(countSumDto.getSumExpert() + positiveMark);
+                    countSumDto.setCountExpert(countSumDto.getCountExpert() + countMarks);
+                    countSumDto.setSumExpert(countSumDto.getSumExpert() + positiveMark * countMarks);
                 } else {
-                    countSumDto.setCountUser(countSumDto.getCountUser() + 1);
-                    countSumDto.setSumUser(countSumDto.getSumUser() + positiveMark);
+                    countSumDto.setCountUser(countSumDto.getCountUser() + countMarks);
+                    countSumDto.setSumUser(countSumDto.getSumUser() + positiveMark * countMarks);
                 }
                 videoSumMarksByClasses.put(videoRatingDto.getMultimediaClassId(), countSumDto);
             }

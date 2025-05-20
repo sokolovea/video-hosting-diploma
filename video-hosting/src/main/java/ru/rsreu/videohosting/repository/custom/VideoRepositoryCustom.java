@@ -2,7 +2,6 @@ package ru.rsreu.videohosting.repository.custom;
 
 import ru.rsreu.videohosting.entity.Video;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -5,14 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.*;
@@ -22,10 +20,8 @@ import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 import ru.rsreu.videohosting.service.*;
 
-import javax.management.DescriptorKey;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -47,10 +43,6 @@ public class MVCVideoHostingController {
     private final VideoViewsRepository videoViewsRepository;
     private final UserVideoMarkRepository videoMarkRepository;
     private final SubscriptionRepository subscriptionRepository;
-    private final VideoService videoService;
-    private final CustomWebClientService customWebClientService;
-    private final CommentService commentService;
-    private final RoleRepository roleRepository;
     private final JdbcRatingDao jdbcRatingDao;
 
 
@@ -68,7 +60,7 @@ public class MVCVideoHostingController {
                                      @Autowired CommentService commentService,
                                      @Autowired SubscriptionRepository subscriptionRepository,
                                      @Autowired RoleRepository roleRepository,
-                                     @Autowired JdbcRatingDao jdbcRatingDao) {
+                                     @Autowired JdbcRatingDao jdbcRatingDao, PlaylistRepository playlistRepository) {
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
@@ -78,11 +70,7 @@ public class MVCVideoHostingController {
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.videoMarkRepository = videoMarkRepository;
-        this.videoService = videoService;
-        this.customWebClientService = customWebClientService;
-        this.commentService = commentService;
         this.subscriptionRepository = subscriptionRepository;
-        this.roleRepository = roleRepository;
         this.jdbcRatingDao = jdbcRatingDao;
     }
 
@@ -258,13 +246,14 @@ public class MVCVideoHostingController {
             return "redirect:/403";
         }
 
-        videoMarkRepository.deleteByVideo(video);
-        commentRepository.deleteByVideo(video);
-        videoViewsRepository.deleteByVideo(video);
+//        videoMarkRepository.deleteByVideo(video);
+//        commentRepository.deleteByVideo(video);
+//        videoViewsRepository.deleteByVideo(video);
         String imagePath = video.getImagePath();
         String videoPath = video.getVideoPath();
-        videoRepository.delete(video);
+//        videoRepository.delete(video);
 
+        videoRepository.softDeleteVideo(videoId);
         try {
             if (videoPath != null) {
                 storageService.deleteFile(videoPath);
@@ -321,15 +310,24 @@ public class MVCVideoHostingController {
     @GetMapping("/video/{videoId}")
     public String video(@PathVariable("videoId") Long videoId, Model model,
                         HttpServletRequest request,
-                        Principal principal) {
+                        Principal principal,
+                        RedirectAttributes redirectAttributes) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
 
         if (optionalVideo.isPresent()) {
             Video video = optionalVideo.get();
+            if (video.getIsBlocked()) {
+                if (principal == null || !Objects.equals(video.getAuthor().getUserId(), userRepository.findByLogin(principal.getName()).get().getUserId())) {
+                    return "redirect:/404";
+                } else {
+                    redirectAttributes.addFlashAttribute("blocked", true);
+                    return "redirect:/video_edit/" + videoId;
+                }
+            }
 
             // var a = jdbcRatingDao.getVideoRating(video); //DEBUG
             // Получение всех комментариев для данного видео
-            List<Comment> allComments = commentRepository.findByVideo(video);
+            List<Comment> allComments = commentRepository.findByVideoAndNotBlocked(video);
 
             // Построение дерева комментариев
             Map<Comment, List<Comment>> commentTree = buildCommentTree(allComments);
@@ -489,6 +487,10 @@ public class MVCVideoHostingController {
                 // Релевантность только для указанной категории
                 RelevanceDTO relevanceDto = videoRelevance.get(multimediaClass);
                 if (relevanceDto != null) {
+
+                    userRating = videoRatings.get(multimediaClass).getRatingUser();
+                    expertRating = videoRatings.get(multimediaClass).getRatingExpert();
+
                     if (relevanceDto.getRelevanceUser() != null) {
                         userRelevance = relevanceDto.getRelevanceUser();
                     }
@@ -564,31 +566,5 @@ public class MVCVideoHostingController {
         model.addAttribute("subscriptions", subscriptions);
         return "subscriptions";
     }
-//
-//
-//    @PostMapping("/video/{videoId}/comment/{commentId}/like")
-//    public String likeComment(@PathVariable Long videoId,
-//                              @PathVariable Long commentId,
-//                              @RequestParam("markId") Long markId,
-//                              Principal principal) {
-//        if (principal != null) {
-//            Optional<User> userOptional = userRepository.findByLogin(principal.getName());
-//            User user = userOptional.get();
-//            Optional<Comment> commentOptional = commentRepository.findById(commentId);
-//
-//            if (commentOptional.isPresent()) {
-//                Comment comment = commentOptional.get();
-//                UserCommentMark userCommentMark = new UserCommentMark();
-//                userCommentMark.setComment(comment);
-//                userCommentMark.setUser(user);
-//                Optional<MarkType> mark = markRepository.findById(markId);
-//                if (mark.isPresent()) {
-//                    userCommentMark.setMark(mark.get());
-//                    userCommentMarkRepository.save(userCommentMark);
-//                }
-//            }
-//        }
-//        return "redirect:/video/" + videoId;
-//    }
 
 }

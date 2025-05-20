@@ -1,8 +1,6 @@
 package ru.rsreu.videohosting.repository.composite;
 
 import lombok.*;
-
-import javax.persistence.Column;
 import java.io.Serializable;
 
 @Data

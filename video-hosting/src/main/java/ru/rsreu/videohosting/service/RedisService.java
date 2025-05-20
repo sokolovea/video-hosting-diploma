@@ -28,7 +28,8 @@ public class RedisService {
     public Double getRatingUser(Long userId, Long classId) {
         String key = RATING_USER_KEY_PREFIX + userId + ":" + classId;
         Object rating = redisTemplate.opsForValue().get(key);
-        return rating != null ? (Double) rating : null;
+        return null;
+//        return rating != null ? (Double) rating : null;
     }
 
     public void saveRatingVideo(Long videoId, Long classId, CountSumDto countSumDto) {
@@ -39,7 +40,8 @@ public class RedisService {
     public CountSumDto getRatingVideo(Long videoId, Long classId) {
         String key = RATING_VIDEO_KEY_PREFIX + videoId + ":" + classId;
         Object rating = redisTemplate.opsForValue().get(key);
-        return rating != null ? (CountSumDto) rating : null;
+        return null;
+//        return rating != null ? (CountSumDto) rating : null;
     }
 
     public void saveRelevanceVideo(Long videoId, Long classId, double rating, Long userRoleId) {
@@ -50,7 +52,8 @@ public class RedisService {
     public Double getRelevanceVideo(Long videoId, Long classId, Long userRoleId) {
         String key = RELEVANCE_VIDEO_KEY_PREFIX+ videoId + ":" + classId + ":" + userRoleId;
         Object rating = redisTemplate.opsForValue().get(key);
-        return rating != null ? (Double) rating : null;
+        return null;
+//        return rating != null ? (Double) rating : null;
     }
 }
 

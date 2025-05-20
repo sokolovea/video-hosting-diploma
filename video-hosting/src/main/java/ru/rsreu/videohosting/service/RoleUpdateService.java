@@ -37,15 +37,12 @@ public class RoleUpdateService {
     }
 
     /**
-     * Проверяет рейтинги пользователей каждые 15 минут
+     * Проверяет рейтинги пользователей каждые 5 минут
      */
     @Scheduled(fixedRate = 5 * 1000)
     @Transactional
     public void updateRolesBasedOnRatings() {
 
-//        System.out.println("Updating roles based on ratings");
-
-        // Получаем все назначения ролей
         List<User> users = userRepository.findAll();
         List<MultimediaClass> multimediaClasses = multimediaClassRepository.findAll();
 
@@ -56,10 +53,8 @@ public class RoleUpdateService {
                 RoleAssignment assignment = roleAssignmentRepository.findByReceiverAndMultimediaClass(user, multimediaClass);
                 Role newRole = null;
                 if (userRating >= 1 && !assignment.getRole().getRoleName().equals("EXPERT")) {
-                    // Назначаем новую роль
                     newRole = roleRepository.findByRoleName("EXPERT")
                             .orElseThrow(() -> new IllegalStateException("Роль EXPERT не найдена"));
-                    // Логируем изменение
                 } else if (userRating < 1 && !assignment.getRole().getRoleName().equals("USER")) {
                     newRole = roleRepository.findByRoleName("USER")
                             .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));

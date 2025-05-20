@@ -1,7 +1,6 @@
 package ru.rsreu.videohosting.repository.composite;
 
 import lombok.*;
-import ru.rsreu.videohosting.entity.User;
 
 import java.io.Serializable;
 

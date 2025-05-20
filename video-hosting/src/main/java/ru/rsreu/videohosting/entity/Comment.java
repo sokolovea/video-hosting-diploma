@@ -38,7 +38,7 @@ public class Comment implements Serializable, Comparable<Comment> {
     @JsonIgnore
     private Comment parent;
 
-    private Boolean isModified;
+    private Boolean isBlocked;
 
     @Transient
     private Long likesCount;

@@ -3,12 +3,13 @@ package ru.rsreu.videohosting.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.rsreu.videohosting.dto.RatingDto;
 import ru.rsreu.videohosting.dto.VideoGetAdminDto;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.entity.VideoViews;
-import ru.rsreu.videohosting.repository.*;
+import ru.rsreu.videohosting.repository.UserRepository;
+import ru.rsreu.videohosting.repository.VideoRepository;
+import ru.rsreu.videohosting.repository.VideoViewsRepository;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.Duration;
@@ -28,10 +29,6 @@ public class VideoService {
     private UserRepository userRepository;
 
     private static final Duration VIEW_INTERVAL = Duration.ofHours(1);
-    @Autowired
-    private UserVideoMarkRepository userVideoMarkRepository;
-    @Autowired
-    private MarkRepository markRepository;
 
     public boolean canRecordView(Long videoId, Long userId, String viewerId) {
         Optional<Video> optionalVideo = videoRepository.findById(videoId);
@@ -48,7 +45,7 @@ public class VideoService {
         return false;
     }
 
-//    @Transactional
+
     public void recordView(Long videoId, Long userId, String ipAddress) {
         if (videoId == null) {
             return;
@@ -72,17 +69,9 @@ public class VideoService {
         videoViewsRepository.save(viewLog);
     }
 
-    public RatingDto getVideoRating(Long videoId) {
-        RatingDto ratingDto = new RatingDto();
-        Optional<Video> optionalVideo = videoRepository.findById(videoId);
-
-        ratingDto.setRatingExpert(80.0);
-        ratingDto.setRatingUser(90.0);
-        return ratingDto;
-    }
 
     public List<VideoGetAdminDto> getAllVideos() {
-        return videoRepository.findAll().stream().map(
+        return videoRepository.findAllNotDeleted().stream().map(
                 video -> new VideoGetAdminDto(
                         video.getVideoId(),
                         video.getTitle(),

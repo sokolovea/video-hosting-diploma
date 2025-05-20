@@ -5,12 +5,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.MutualLikePairWeight;
 import ru.rsreu.videohosting.repository.*;
-import ru.rsreu.videohosting.service.*;
+import ru.rsreu.videohosting.service.BoostDetectionService;
+import ru.rsreu.videohosting.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,68 +28,33 @@ public class AdminController {
     public static final int MIN_CYCLE_LENGTH = 2;
     public static final int MAX_CYCLE_LENGTH = 10;
     private final UserVideoMarkRepository userVideoMarkRepository;
-    private SessionStatisticsController sessionStatisticsController;
-    private final MultimediaClassRepository multimediaClassRepository;
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
-    private final MarkRepository markRepository;
     private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
-    private final StorageService storageService;
-    private final VideoViewsRepository videoViewsRepository;
-    private final UserVideoMarkRepository videoMarkRepository;
-    private final SubscriptionRepository subscriptionRepository;
-    private final VideoService videoService;
-    private final CustomWebClientService customWebClientService;
-    private final CommentService commentService;
-    private final RoleRepository roleRepository;
-    private final JdbcRatingDao jdbcRatingDao;
     private final BoostDetectionService boostDetectionService;
     private final UserService userService;
 
 
     @Autowired
     public AdminController(@Autowired UserRepository userRepository,
-                                     @Autowired MultimediaClassRepository multimediaClassRepository,
-                                     @Autowired VideoRepository videoRepository,
-                                     @Autowired CommentRepository commentRepository,
-                                     @Autowired MarkRepository markRepository,
-                                     @Autowired UserCommentMarkRepository commentMarkRepository,
-                                     @Autowired StorageService storageService,
-                                     @Autowired VideoViewsRepository videoViewsRepository,
-                                     @Autowired UserVideoMarkRepository videoMarkRepository,
-                                     @Autowired VideoService videoService,
-                                     @Autowired CustomWebClientService customWebClientService,
-                                     @Autowired CommentService commentService,
-                                     @Autowired SubscriptionRepository subscriptionRepository,
-                                     @Autowired RoleRepository roleRepository,
-                                     @Autowired JdbcRatingDao jdbcRatingDao,
-                                     @Autowired SessionStatisticsController sessionStatisticsController,
-                                     @Autowired BoostDetectionService boostDetectionService,
-                                     @Autowired UserService userService) {
+                             @Autowired VideoRepository videoRepository,
+                             @Autowired CommentRepository commentRepository,
+                             @Autowired UserCommentMarkRepository commentMarkRepository,
+                             @Autowired UserVideoMarkRepository videoMarkRepository,
+                             @Autowired BoostDetectionService boostDetectionService,
+                             @Autowired UserService userService) {
         this.userVideoMarkRepository = videoMarkRepository;
         this.userRepository = userRepository;
-        this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
-        this.markRepository = markRepository;
-        this.storageService = storageService;
         this.userCommentMarkRepository = commentMarkRepository;
-        this.videoViewsRepository = videoViewsRepository;
-        this.videoMarkRepository = videoMarkRepository;
-        this.videoService = videoService;
-        this.customWebClientService = customWebClientService;
-        this.commentService = commentService;
-        this.subscriptionRepository = subscriptionRepository;
-        this.roleRepository = roleRepository;
-        this.jdbcRatingDao = jdbcRatingDao;
-        this.sessionStatisticsController = sessionStatisticsController;
         this.boostDetectionService = boostDetectionService;
         this.userService = userService;
     }
 
     @GetMapping
-    public String adminMainPage(Model model) {
+    public String adminMainPage() {
         return "admin_main";
     }
 

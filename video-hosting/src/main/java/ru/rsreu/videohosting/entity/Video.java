@@ -1,16 +1,13 @@
 package ru.rsreu.videohosting.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
+@Builder
 @Entity
 @Getter
 @Setter
@@ -45,7 +42,11 @@ public class Video implements Serializable {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "is_blocked")
-    private Boolean isBlocked;
+    private Boolean isBlocked = false;
+
+    @Builder.Default
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
 
     public String getImagePath() {
         return '/' + imagePath;
@@ -53,10 +54,6 @@ public class Video implements Serializable {
 
     public String getVideoPath() {
         return '/' + videoPath;
-    }
-
-    public double getRatingPercents() {
-        return 90;
     }
 
 }

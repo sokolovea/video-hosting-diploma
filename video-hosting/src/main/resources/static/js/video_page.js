@@ -20,6 +20,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const commentId = form.querySelector('.commentId').value;
+
+            const isAdminBlock = form.querySelector('.isAdminBlock');
+
+            if (isAdminBlock) {
+
+                const formData = new FormData(form);
+                const url = `http://localhost:8082/api/admin/comment/${commentId}/block`;
+
+                const method = form.method;
+                const commentItem = form.closest('.comment-item');
+
+                console.log(commentItem);
+                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({id: commentId})
+                }).then(() => {
+                    location.reload();
+                });
+
+            }
+
             const markId = form.querySelector('.markId').value;
 
             const formData = new FormData(form);
@@ -64,6 +92,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+
+export function blockComment(commentId) {
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    fetch('/api/admin/comments/block', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        body: JSON.stringify({id: commentId})
+    }).then(() => {
+        location.reload(); // обновляем страницу после успешного запроса
+    });
+}
 
 
 
@@ -232,6 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     console.log('Комментарий добавлен:', data);
+                    location.reload();
                     // Логика для обновления интерфейса (например, добавление нового комментария в список)
                 })
                 .catch(error => console.error('Ошибка:', error));
@@ -414,3 +458,4 @@ async function removeVideoFromPlaylist(playlistId, videoId) {
 
 
 window.toggleReplyForm = toggleReplyForm;
+window.blockComment = blockComment;

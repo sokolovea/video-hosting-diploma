@@ -63,7 +63,7 @@ public class UserService {
         List<MultimediaClass> multimediaClasses = multimediaClassRepository.getAllMultimediaClasses();
         for (MultimediaClass multimediaClass: multimediaClasses) {
             user.getRoleAssignments().add(
-                    new RoleAssignment(user, userRole, multimediaClass, LocalDateTime.now(), false));
+                    new RoleAssignment(user, userRole, multimediaClass, LocalDateTime.now()));
         }
 
         userRepository.save(user);

@@ -9,9 +9,7 @@ import ru.rsreu.videohosting.repository.MultimediaClassRepository;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 public class VideoRepositoryImpl implements VideoRepositoryCustom {
@@ -44,6 +42,7 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
         if (authorId != null) {
             jpql.append(" AND v.author.userId = :authorId");
         }
+        jpql.append(" AND v.isDeleted = false");
 
         TypedQuery<Video> typedQuery = entityManager.createQuery(jpql.toString(), Video.class);
         if (query != null && !query.isEmpty()) {

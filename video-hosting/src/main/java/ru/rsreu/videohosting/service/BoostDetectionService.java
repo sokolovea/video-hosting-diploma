@@ -54,8 +54,8 @@ public class BoostDetectionService {
             graph.addVertex(e.getUserA());
             graph.addVertex(e.getUserB());
             DefaultWeightedEdge edge = graph.addEdge(e.getUserA(), e.getUserB()); // Добавляем ребро
-            if (edge != null) { // Проверяем, что ребро добавлено успешно
-                graph.setEdgeWeight(edge, e.getWeight()); // Устанавливаем вес
+            if (edge != null) {
+                graph.setEdgeWeight(edge, e.getWeight());
             }
         });
 
@@ -84,7 +84,7 @@ public class BoostDetectionService {
         // 4) Фильтрация по длине
         return weightedCycles.stream()
                 .filter(cycle -> cycle.getLeft().size() >= minLength && cycle.getLeft().size() <= maxLength)
-                .collect(Collectors.toList());  // возвращаем List<Pair<List<Long>, Double>>
+                .collect(Collectors.toList());
     }
 
 }

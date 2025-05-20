@@ -7,53 +7,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.rsreu.videohosting.dto.*;
-import ru.rsreu.videohosting.entity.*;
+import ru.rsreu.videohosting.dto.SubscriptionDTO;
+import ru.rsreu.videohosting.entity.Subscription;
+import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.enumeration.ActionSubscribeEnum;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.repository.composite.SubscriptionId;
-import ru.rsreu.videohosting.service.StorageService;
-import ru.rsreu.videohosting.service.VideoService;
 
 import java.security.Principal;
-import java.util.*;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/api/user", produces = "application/json")
-//@CrossOrigin(origins = {"http://localhost:8082"}) // DEBUG
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:8082"})
+//@CrossOrigin(origins = "*")
 public class UserRestController {
     private static final Logger log = LoggerFactory.getLogger(VideoHostingRestController.class);
 
-    private final MultimediaClassRepository multimediaClassRepository;
-    private final VideoRepository videoRepository;
-    private final CommentRepository commentRepository;
-    private final MarkRepository markRepository;
-    private final UserCommentMarkRepository userCommentMarkRepository;
+
     private final UserRepository userRepository;
-    private final StorageService storageService;
-    private final VideoService videoService;
-    private final UserVideoMarkRepository userVideoMarkRepository;
     private final SubscriptionRepository subscriptionRepository;
 
-    public UserRestController(@Autowired MultimediaClassRepository multimediaClassRepository,
-                              @Autowired VideoRepository videoRepository,
-                              @Autowired CommentRepository commentRepository,
-                              @Autowired MarkRepository markRepository,
-                              @Autowired UserCommentMarkRepository userCommentMarkRepository,
-                              @Autowired UserRepository userRepository,
-                              @Autowired StorageService storageService,
-                              @Autowired VideoService videoService,
-                              @Autowired UserVideoMarkRepository userVideoMarkRepository, SubscriptionRepository subscriptionRepository) {
-        this.multimediaClassRepository = multimediaClassRepository;
-        this.videoRepository = videoRepository;
-        this.commentRepository = commentRepository;
-        this.markRepository = markRepository;
-        this.userCommentMarkRepository = userCommentMarkRepository;
+    public UserRestController(@Autowired UserRepository userRepository,
+                              @Autowired SubscriptionRepository subscriptionRepository) {
         this.userRepository = userRepository;
-        this.storageService = storageService;
-        this.videoService = videoService;
-        this.userVideoMarkRepository = userVideoMarkRepository;
         this.subscriptionRepository = subscriptionRepository;
     }
 

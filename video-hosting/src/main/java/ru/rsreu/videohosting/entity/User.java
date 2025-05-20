@@ -14,7 +14,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -60,10 +59,10 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
 
     @Column(name = "is_admin")
-    private Boolean isAdmin;
+    private Boolean isAdmin = false;
 
     @Column(name = "is_blocked")
-    private Boolean isBlocked;
+    private Boolean isBlocked = false;
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RoleAssignment> roleAssignments = new HashSet<>();
@@ -76,9 +75,6 @@ public class User implements UserDetails {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
         return authorities;
-//        return roles.stream()
-//                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
-//                .collect(Collectors.toList());
     }
 
     @Override

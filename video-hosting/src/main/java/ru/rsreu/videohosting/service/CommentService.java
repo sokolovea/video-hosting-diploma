@@ -1,21 +1,15 @@
 package ru.rsreu.videohosting.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.entity.Comment;
-import ru.rsreu.videohosting.entity.Role;
-import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.repository.CommentRepository;
-import ru.rsreu.videohosting.repository.RoleRepository;
-import ru.rsreu.videohosting.repository.UserRepository;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class CommentService {
@@ -36,6 +30,13 @@ public class CommentService {
         }
 
         return commentsWithReplies;
+    }
+
+    @Transactional
+    public void blockComment(Long commentId) {
+        if (commentId != null) {
+            commentRepository.blockCommentWithReplies(commentId);
+        }
     }
 
 }

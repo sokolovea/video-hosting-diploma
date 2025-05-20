@@ -6,7 +6,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.stereotype.Service;
 import ru.rsreu.videohosting.dto.ViewRequestDTO;
 
-import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class CustomWebClientService {

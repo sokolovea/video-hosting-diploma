@@ -1,6 +1,5 @@
 package ru.rsreu.videohosting.service;
 
-import jdk.jfr.ContentType;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
@@ -11,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -53,7 +53,7 @@ public class StorageService {
             if (originalFilename == null || originalFilename.isBlank()) {
                 throw new IllegalArgumentException("Файл не имеет имени");
             }
-            String filename = UUID.randomUUID() + "_" + originalFilename;
+            String filename = UUID.randomUUID() + "_" + Base64.getEncoder().encodeToString(originalFilename.getBytes()) + ".mp4";
 
             Path targetPath  = Paths.get(targetDirectory + "/" + filename);
             Files.createDirectories(targetPath.getParent());
@@ -71,7 +71,7 @@ public class StorageService {
 
     public boolean deleteFile(String filePath) {
         try {
-            Path path = resolvePath(filePath);
+            Path path = resolvePath(filePath.substring(1));
             return Files.deleteIfExists(path);
         } catch (IOException e) {
             throw new RuntimeException("Ошибка удаления файла: " + e.getMessage(), e);

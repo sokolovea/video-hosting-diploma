@@ -5,12 +5,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.rsreu.videohosting.entity.MultimediaClass;
-import ru.rsreu.videohosting.entity.Playlist;
 import ru.rsreu.videohosting.entity.User;
 import ru.rsreu.videohosting.entity.Video;
 import ru.rsreu.videohosting.repository.custom.VideoRepositoryCustom;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface VideoRepository extends JpaRepository<Video, Long>, VideoRepositoryCustom {
@@ -24,5 +22,12 @@ public interface VideoRepository extends JpaRepository<Video, Long>, VideoReposi
 
     @Modifying
     @Query("UPDATE Video v SET v.isBlocked = :isBlocked WHERE v.videoId = :videoId")
-    void updateBlockedStatus(Long videoId, Boolean isBlocked);
+    void updateBlockedStatus(@Param("videoId") Long videoId, @Param("isBlocked") Boolean isBlocked);
+
+    @Modifying
+    @Query("UPDATE Video v SET v.isDeleted = true WHERE v.videoId = :videoId")
+    void softDeleteVideo(@Param("videoId") Long videoId);
+
+    @Query("SELECT v FROM Video v where v.isDeleted = false")
+    List<Video> findAllNotDeleted();
 }
