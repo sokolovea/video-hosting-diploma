@@ -2,10 +2,14 @@ package ru.rsreu.videohosting.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.web.bind.annotation.*;
 import ru.rsreu.videohosting.dto.IdRequestDto;
 import ru.rsreu.videohosting.dto.UserDTO;
 import ru.rsreu.videohosting.dto.VideoGetAdminDto;
+import ru.rsreu.videohosting.entity.User;
+import ru.rsreu.videohosting.repository.UserRepository;
 import ru.rsreu.videohosting.service.CommentService;
 import ru.rsreu.videohosting.service.UserService;
 import ru.rsreu.videohosting.service.VideoService;
@@ -20,15 +24,20 @@ public class AdminActionRestController {
     private final UserService userService;
     private final VideoService videoService;
     private final CommentService commentService;
+    private final SessionRegistry sessionRegistry;
+    private final UserRepository userRepository;
 
     @Autowired
     public AdminActionRestController(
             @Autowired UserService userService,
             @Autowired VideoService videoService,
-            @Autowired CommentService commentService) {
+            @Autowired CommentService commentService,
+            @Autowired SessionRegistry sessionRegistry, UserRepository userRepository) {
         this.userService = userService;
         this.videoService = videoService;
         this.commentService = commentService;
+        this.sessionRegistry = sessionRegistry;
+        this.userRepository = userRepository;
     }
 
 
@@ -41,6 +50,18 @@ public class AdminActionRestController {
     @PostMapping("/users/block")
     public ResponseEntity<Void> blockUser(@RequestBody IdRequestDto request) {
         userService.blockUser(request.getId());
+        if (userService.isUserExist(request.getId())) {
+            User blockedUser = userRepository.findById(request.getId()).get();
+            sessionRegistry.getAllPrincipals().stream()
+                    .filter(principal -> principal instanceof org.springframework.security.core.userdetails.User)
+                    .map(principal -> (org.springframework.security.core.userdetails.User) principal)
+                    .filter(user -> user.getUsername().equals(blockedUser.getUsername()))
+                    .forEach(user -> {
+                        for (SessionInformation sessionInfo : sessionRegistry.getAllSessions(user, false)) {
+                            sessionInfo.expireNow();
+                        }
+                    });
+        }
         return ResponseEntity.ok().build();
     }
 

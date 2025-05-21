@@ -80,7 +80,7 @@
                         </div>
                     </div>
                     <p><strong>Дата регистрации:</strong> <span th:text="${#temporals.format(user.createdAt, 'dd.MM.yyyy')}"></span></p>
-                    <a th:href="@{/search(query=${''}, authorId=${user.id})}">Видео данного пользователя</a>
+                    <a th:href="@{/search(query=${''}, authorLogin=${user.getLogin()})}">Видео данного пользователя</a>
                     <div th:if="${isCurrentUserEquals}">
                         <a th:href="@{/profile/edit}">Редактировать профиль</a>
                     </div>

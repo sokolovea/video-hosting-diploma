@@ -59,8 +59,18 @@
     }
 
     .delete-button {
-      background-color: #ff6666;
+      margin-left: auto;
+      background: #cc0000;
       color: white;
+      border: none;
+      border-radius: 18px;
+      padding: 10px 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .delete-button:hover {
+      background: #b30000;
     }
 
     .rename-button {
@@ -94,8 +104,8 @@
 
     <!-- Форма создания плейлиста -->
     <div class="form-inline" style="display: flex; align-items: center;">
-      <label for="newPlaylistName">Введите название плейлиста</label><input type="text" id="newPlaylistName" placeholder="Название плейлиста" required>
-      <button class="view-button" onclick="createPlaylist()">Создать</button>
+      <label for="newPlaylistName">Введите название плейлиста</label><input class="custom-input" type="text" id="newPlaylistName" placeholder="Название плейлиста" required>
+      <button class="action-button" onclick="createPlaylist()">Создать</button>
     </div>
 
     <!-- Список плейлистов -->

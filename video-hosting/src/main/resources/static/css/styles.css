@@ -103,6 +103,14 @@ nav ul li a:hover {
     font-size: 14px;
 }
 
+.custom-input {
+    width: 250px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
 .search-form button {
     background-color: #4CAF50;
     border: none;
@@ -589,7 +597,7 @@ button:hover {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #8a8a8a;
+    background: green;
     border: none;
     border-radius: 18px;
     padding: 8px 16px;
@@ -598,7 +606,7 @@ button:hover {
 }
 
 .action-button:hover {
-    background: #e5e5e5;
+    background: darkgreen;
 }
 
 .user-info {
@@ -644,6 +652,22 @@ button:hover {
 
 .subscribe-button:hover {
     background: #b30000;
+}
+
+.other-video-button {
+    margin-left: auto;
+    background:darkgreen;
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 10px 16px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.other-video-button:hover {
+    background: darkolivegreen;
 }
 
 .video-description {

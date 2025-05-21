@@ -66,7 +66,7 @@
                     </div>
                     <div th:if="${(currentUserId != null) && (video.getAuthor().getUserId() == currentUserId)}">
                         <div>
-                            <a th:href="@{/video_edit/{id}(id=${videoId})}" class="action-button">Редактировать видео</a>
+                            <a th:href="@{/video_edit/{id}(id=${videoId})}" class="other-video-button">Редактировать видео</a>
                         </div>
                     </div>
 

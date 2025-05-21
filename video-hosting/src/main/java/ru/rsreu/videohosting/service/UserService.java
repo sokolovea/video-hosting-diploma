@@ -95,6 +95,11 @@ public class UserService {
     }
 
     @Transactional
+    public boolean isUserExist(long userId) {
+        return userRepository.findById(userId).isPresent();
+    }
+
+    @Transactional
     public boolean isUserWithCurrentEmailExist(String email) {
         return userRepository.findByEmail(email).isPresent();
     }

@@ -21,6 +21,9 @@ import java.util.Map;
 @Service
 public class RoleUpdateService {
 
+    public static final int MIN_RATING_TO_BE_EXPERT = 1;
+    public static final double COEFFICIENT_RATING_DOWN = 0.9;
+
     private final RoleAssignmentRepository roleAssignmentRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
@@ -52,10 +55,10 @@ public class RoleUpdateService {
                 Double userRating = ratingsByClasses.get(multimediaClass);
                 RoleAssignment assignment = roleAssignmentRepository.findByReceiverAndMultimediaClass(user, multimediaClass);
                 Role newRole = null;
-                if (userRating >= 1 && !assignment.getRole().getRoleName().equals("EXPERT")) {
+                if (userRating >= MIN_RATING_TO_BE_EXPERT && !assignment.getRole().getRoleName().equals("EXPERT")) {
                     newRole = roleRepository.findByRoleName("EXPERT")
                             .orElseThrow(() -> new IllegalStateException("Роль EXPERT не найдена"));
-                } else if (userRating < 1 && !assignment.getRole().getRoleName().equals("USER")) {
+                } else if (userRating < (MIN_RATING_TO_BE_EXPERT * COEFFICIENT_RATING_DOWN) && !assignment.getRole().getRoleName().equals("USER")) {
                     newRole = roleRepository.findByRoleName("USER")
                             .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
                 } else {

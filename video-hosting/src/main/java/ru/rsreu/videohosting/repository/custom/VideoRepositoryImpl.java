@@ -22,7 +22,7 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
 
     @Override
     public List<Video> findWithFilters(String query, String category, LocalDateTime startDate,
-                                       LocalDateTime endDate, Long authorId) {
+                                       LocalDateTime endDate, String authorLogin) {
         StringBuilder jpql = null;
         if (query == null || query.isEmpty()) {
             jpql = new StringBuilder("SELECT v FROM Video v, User u WHERE v.author.userId = u.userId ");
@@ -39,8 +39,8 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
         if (endDate != null) {
             jpql.append(" AND v.createdAt <= :endDate");
         }
-        if (authorId != null) {
-            jpql.append(" AND v.author.userId = :authorId");
+        if (authorLogin != null && !authorLogin.isEmpty()) {
+            jpql.append(" AND u.login = :authorLogin");
         }
         jpql.append(" AND v.isDeleted = false");
 
@@ -60,8 +60,8 @@ public class VideoRepositoryImpl implements VideoRepositoryCustom {
         if (endDate != null) {
             typedQuery.setParameter("endDate", endDate);
         }
-        if (authorId != null) {
-            typedQuery.setParameter("authorId", authorId);
+        if (authorLogin != null && !authorLogin.isEmpty()) {
+            typedQuery.setParameter("authorLogin", authorLogin);
         }
 
         return typedQuery.getResultList();

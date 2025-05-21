@@ -25,6 +25,7 @@ public class VideoSearchDto {
     private LocalDateTime videoUploadDate;
     private Long views;
     private User author;
+    private boolean isBlocked = false;
 
     public VideoSearchDto(Video video, Double ratingUser, Double ratingExpert,
                           Double relevanceUser, Double relevanceExpert,
@@ -40,5 +41,6 @@ public class VideoSearchDto {
         this.videoUploadDate = videoUploadDate;
         this.views = views;
         this.author = video.getAuthor();
+        this.isBlocked = video.getIsBlocked();
     }
 }

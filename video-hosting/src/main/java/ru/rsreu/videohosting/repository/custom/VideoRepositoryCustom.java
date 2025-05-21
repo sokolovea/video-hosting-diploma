@@ -6,5 +6,5 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VideoRepositoryCustom {
-    List<Video> findWithFilters(String query, String category, LocalDateTime startDate, LocalDateTime endDate, Long authorId);
+    List<Video> findWithFilters(String query, String category, LocalDateTime startDate, LocalDateTime endDate, String authorLogin);
 }

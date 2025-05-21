@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VideoViewsRepository extends JpaRepository<VideoViews, Long> {
+
+    @Query("SELECT vw FROM video_views vw JOIN Video v on vw.video = v where v.isDeleted = false ORDER BY vw.viewedAt DESC")
     List<VideoViews> findByUserOrderByViewedAtDesc(User user);
     List<VideoViews> findByVideo(Video video);
     Long countByVideo(Video video);

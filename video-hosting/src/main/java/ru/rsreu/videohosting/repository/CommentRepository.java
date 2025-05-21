@@ -14,8 +14,8 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByVideo(Video video);
 
-    @Query("SELECT c FROM Comment c WHERE c.isBlocked = false")
-    List<Comment> findByVideoAndNotBlocked(Video video);
+    @Query("SELECT c FROM Comment c WHERE c.isBlocked = false and c.video = :video")
+    List<Comment> findByVideoIdAndNotBlocked(@Param("video") Video video);
 
     List<Comment> findByUser(User user);
 

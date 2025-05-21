@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.rsreu.videohosting.VideoHostingApplication;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.*;
 import ru.rsreu.videohosting.entity.*;
@@ -44,6 +45,7 @@ public class MVCVideoHostingController {
     private final UserVideoMarkRepository videoMarkRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final JdbcRatingDao jdbcRatingDao;
+    private final VideoHostingApplication videoHostingApplication;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -60,7 +62,7 @@ public class MVCVideoHostingController {
                                      @Autowired CommentService commentService,
                                      @Autowired SubscriptionRepository subscriptionRepository,
                                      @Autowired RoleRepository roleRepository,
-                                     @Autowired JdbcRatingDao jdbcRatingDao, PlaylistRepository playlistRepository) {
+                                     @Autowired JdbcRatingDao jdbcRatingDao, PlaylistRepository playlistRepository, VideoHostingApplication videoHostingApplication) {
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
@@ -72,6 +74,7 @@ public class MVCVideoHostingController {
         this.videoMarkRepository = videoMarkRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.jdbcRatingDao = jdbcRatingDao;
+        this.videoHostingApplication = videoHostingApplication;
     }
 
 
@@ -327,7 +330,7 @@ public class MVCVideoHostingController {
 
             // var a = jdbcRatingDao.getVideoRating(video); //DEBUG
             // Получение всех комментариев для данного видео
-            List<Comment> allComments = commentRepository.findByVideoAndNotBlocked(video);
+            List<Comment> allComments = commentRepository.findByVideoIdAndNotBlocked(video);
 
             // Построение дерева комментариев
             Map<Comment, List<Comment>> commentTree = buildCommentTree(allComments);
@@ -390,24 +393,23 @@ public class MVCVideoHostingController {
             @RequestParam(value = "reverseOrder", required = false, defaultValue = "false") Boolean reverseOrder,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "dd.MM.yyyy") LocalDate endDate,
-            @RequestParam(value = "authorId", required = false) Long authorId,
-            Model model) {
+            @RequestParam(value = "authorLogin", required = false) String authorLogin,
+            Model model,
+            Principal principal) {
 
         model.addAttribute("categories", multimediaClassRepository.findAll());
         model.addAttribute("category", category);
         model.addAttribute("sortBy", sortBy);
-        model.addAttribute("authorId", authorId);
+        model.addAttribute("authorLogin", authorLogin);
         model.addAttribute("reverseOrder", reverseOrder);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         model.addAttribute("startDate", startDate == null ? null : startDate.format(formatter));
         model.addAttribute("endDate", endDate == null ? null : endDate.format(formatter));
 
 
-        // Получение видео по запросу и фильтрам
         List<Video> videos = videoRepository.findWithFilters(query, category, startDate == null ? null : startDate.atStartOfDay(),
-                endDate == null ? null : endDate.atTime(23, 59, 59), authorId);
+                endDate == null ? null : endDate.atTime(23, 59, 59), authorLogin);
 
-        // Сбор просмотров и рейтингов
         Map<Video, Long> videoViews = getVideoViewCounts(videos);
         Map<Long, Map<MultimediaClass, RatingDto>> allRatings = videos.stream()
                 .collect(Collectors.toMap(
@@ -506,6 +508,12 @@ public class MVCVideoHostingController {
                     expertRelevance == null ? -1 : expertRelevance));
         }
 
+        User currentUser;
+        if (principal != null) {
+            currentUser = userRepository.findByLogin(principal.getName()).orElse(null);
+        } else {
+            currentUser = null;
+        }
 
         // Сбор DTO и сортировка
         List<VideoSearchDto> videosDTO = videos.stream()
@@ -523,6 +531,10 @@ public class MVCVideoHostingController {
                     );
                 })
                 .sorted(getComparator(sortBy, reverseOrder))
+                .filter(videoSearchDto ->
+                        !videoSearchDto.isBlocked() ||
+                                (videoSearchDto.isBlocked() && currentUser != null &&
+                                        videoSearchDto.getAuthor().getUserId().equals(currentUser.getUserId())))
                 .toList();
 
         // Добавление данных в модель
