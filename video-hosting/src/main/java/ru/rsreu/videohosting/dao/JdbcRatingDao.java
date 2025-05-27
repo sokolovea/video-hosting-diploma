@@ -83,7 +83,8 @@ public class JdbcRatingDao {
                          @Autowired VideoRepository videoRepository,
                          @Autowired CommentRepository commentRepository,
                          @Autowired RoleRepository roleRepository,
-                         @Autowired VideoViewsRepository videoViewsRepository, RedisService redisService) {
+                         @Autowired VideoViewsRepository videoViewsRepository,
+                         @Autowired RedisService redisService) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.markRepository = markRepository;
         this.videoMarkRepository = videoMarkRepository;
@@ -118,7 +119,9 @@ public class JdbcRatingDao {
             Long dislikesOnUserVideos = this.jdbcTemplate.queryForObject(likesDislikesUserByVideoCount,
                     paramsDislikes, Long.class);
             long marksAssignedToUserVideoCount = likesOnUserVideos + dislikesOnUserVideos;
-            long videosInClassCount = videoRepository.countAllByAuthorAndHavingClass(user, classification);
+            long videosNotDeletedInClassCount = videoRepository.countAllByAuthorAndHavingClassAndNotDeleted(user, classification);
+            long videosInClassCount = videoRepository.countAllByAuthorAndHavingClassAndNotDeleted(user, classification);
+
             double ratingByVideo = 0;
             if (marksAssignedToUserVideoCount != 0) {
                 ratingByVideo = likesOnUserVideos / (double) marksAssignedToUserVideoCount - 0.5;
@@ -129,13 +132,20 @@ public class JdbcRatingDao {
             Long dislikesOnUserComments = this.jdbcTemplate.queryForObject(likesDislikesUserByCommentsCount,
                     paramsDislikes, Long.class);
             long marksAssignedToUserByCommentsCount = likesOnUserComments + dislikesOnUserComments;
+
             long commentsInClassCount = commentRepository.countAllByAuthorAndHavingClass(user, classification);
+            double commentsNotDeletedInClassCount = commentRepository.countAllNotBlockedByAuthorAndHavingClass(user, classification);
+
             double ratingByComments = 0;
             if (marksAssignedToUserByCommentsCount != 0) {
                 ratingByComments = likesOnUserComments / (double) marksAssignedToUserByCommentsCount - 0.5;
             }
-            double finalRating = ratingByVideo * videosInClassCount * 0.9 + ratingByComments * commentsInClassCount * 0.1;
+
+            double finalRating = Math.min(ratingByVideo * videosInClassCount, ratingByComments * videosNotDeletedInClassCount) * 0.9 + Math.min(ratingByComments * commentsInClassCount, ratingByComments * commentsNotDeletedInClassCount) * 0.1;
             userRating.put(classification, finalRating);
+            if (finalRating <= 3.26 && finalRating >= 3.24) {
+                userRating.put(classification, finalRating);
+            }
 
             redisService.saveRatingUser(user.getUserId(), classification.getMultimediaClassId(), finalRating);
         }

@@ -1,22 +1,11 @@
-# Используем официальный образ OpenJDK для запуска приложения
 FROM openjdk:17-jdk-slim
-
-# Указываем рабочую директорию
 WORKDIR /app
-
-# Устанавливаем Maven
-RUN apt-get update && apt-get install -y maven
-
-# Копируем pom.xml и собираем зависимости
+RUN apt-get update && apt-get install -y ffmpeg && apt-get clean && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 COPY pom.xml /app
-RUN mvn dependency:resolve
 
-# Копируем исходники и собираем проект
+RUN mvn dependency:resolve
 COPY . /app
 RUN mvn package -DskipTests
 
-# Указываем порт, который будет прослушивать приложение
 EXPOSE 8082
-
-# Указываем команду запуска
 CMD ["java", "-jar", "target/video-hosting-0.0.1-SNAPSHOT.jar"]

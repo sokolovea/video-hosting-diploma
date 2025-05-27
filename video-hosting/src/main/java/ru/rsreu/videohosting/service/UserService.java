@@ -23,7 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final StorageService storageService;
+    private final LocalStorageService localStorageService;
     private final PasswordEncoder passwordEncoder;
     private final MultimediaClassRepository multimediaClassRepository;
 
@@ -31,10 +31,10 @@ public class UserService {
     @Autowired
     public UserService(UserRepository userRepository,
                        RoleRepository roleRepository,
-                       StorageService storageService, @Autowired PasswordEncoder passwordEncoder, MultimediaClassRepository multimediaClassRepository) {
+                       LocalStorageService localStorageService, @Autowired PasswordEncoder passwordEncoder, MultimediaClassRepository multimediaClassRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.storageService = storageService;
+        this.localStorageService = localStorageService;
         this.passwordEncoder = passwordEncoder;
         this.multimediaClassRepository = multimediaClassRepository;
     }
@@ -54,7 +54,7 @@ public class UserService {
         user.setIsAdmin(false);
 
         if (!dto.getImagePath().isEmpty()) {
-            String filename = storageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
+            String filename = localStorageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
             user.setImagePath(filename);
         }
 
@@ -82,7 +82,7 @@ public class UserService {
         user.setTelephone(dto.getTelephone());
 
         if (!dto.getImagePath().isEmpty()) {
-            String filename = storageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
+            String filename = localStorageService.store(dto.getImagePath(), ContentMultimediaType.LOGO);
             user.setImagePath(filename);
         }
 

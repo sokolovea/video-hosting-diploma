@@ -23,7 +23,10 @@
 <main>
     <section class="video-view">
         <div class="video-container">
-            <video controls th:src="${video.getVideoPath()}" class="video-player"></video>
+            <video controls
+                   th:src="${video.isStoredOnS3() ? video.getVideoPath() : '/' + video.getVideoPath()}"
+                   class="video-player">
+            </video>
 
             <div class="video-info">
                 <h1 class="video-title" th:text="${video.getTitle()}">Название видео</h1>

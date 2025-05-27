@@ -33,7 +33,14 @@ spring:
     import: "classpath:keys.yml"
   messages:
     encoding: UTF-8
+  cache:
+    redis:
+      time-to-live: 5m
 uploads:
   dir:
     uploads/
+custom:
+  max-video-thumbnail-size-mb: 5
+  max-avatar-photo-size-mb: 5
+  s3-enable: false
 

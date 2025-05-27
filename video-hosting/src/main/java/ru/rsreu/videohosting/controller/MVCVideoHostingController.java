@@ -13,13 +13,18 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import ru.rsreu.videohosting.VideoHostingApplication;
+import ru.rsreu.videohosting.config.ConfigProperties;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
-import ru.rsreu.videohosting.dto.*;
+import ru.rsreu.videohosting.dto.RatingDto;
+import ru.rsreu.videohosting.dto.RelevanceDTO;
+import ru.rsreu.videohosting.dto.VideoSearchDto;
+import ru.rsreu.videohosting.dto.VideoUploadDTO;
 import ru.rsreu.videohosting.entity.*;
-import ru.rsreu.videohosting.entity.MultimediaClass;
 import ru.rsreu.videohosting.repository.*;
 import ru.rsreu.videohosting.repository.composite.SubscriptionId;
 import ru.rsreu.videohosting.service.*;
+import ru.rsreu.videohosting.util.ImageValidator;
+import ru.rsreu.videohosting.util.VideoValidator;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
@@ -40,12 +45,13 @@ public class MVCVideoHostingController {
     private final MarkRepository markRepository;
     private final UserCommentMarkRepository userCommentMarkRepository;
     private final UserRepository userRepository;
-    private final StorageService storageService;
+    private final StorageService hybridStorageService;
     private final VideoViewsRepository videoViewsRepository;
     private final UserVideoMarkRepository videoMarkRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final JdbcRatingDao jdbcRatingDao;
     private final VideoHostingApplication videoHostingApplication;
+    private final ConfigProperties configProperties;
 
 
     public MVCVideoHostingController(@Autowired UserRepository userRepository,
@@ -54,7 +60,7 @@ public class MVCVideoHostingController {
                                      @Autowired CommentRepository commentRepository,
                                      @Autowired MarkRepository markRepository,
                                      @Autowired UserCommentMarkRepository commentMarkRepository,
-                                     @Autowired StorageService storageService,
+                                     @Autowired HybridStorageService hybridStorageService,
                                      @Autowired VideoViewsRepository videoViewsRepository,
                                      @Autowired UserVideoMarkRepository videoMarkRepository,
                                      @Autowired VideoService videoService,
@@ -62,19 +68,23 @@ public class MVCVideoHostingController {
                                      @Autowired CommentService commentService,
                                      @Autowired SubscriptionRepository subscriptionRepository,
                                      @Autowired RoleRepository roleRepository,
-                                     @Autowired JdbcRatingDao jdbcRatingDao, PlaylistRepository playlistRepository, VideoHostingApplication videoHostingApplication) {
+                                     @Autowired JdbcRatingDao jdbcRatingDao,
+                                     @Autowired PlaylistRepository playlistRepository,
+                                     @Autowired VideoHostingApplication videoHostingApplication,
+                                     @Autowired ConfigProperties configProperties) {
         this.userRepository = userRepository;
         this.multimediaClassRepository = multimediaClassRepository;
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.markRepository = markRepository;
-        this.storageService = storageService;
+        this.hybridStorageService = hybridStorageService;
         this.userCommentMarkRepository = commentMarkRepository;
         this.videoViewsRepository = videoViewsRepository;
         this.videoMarkRepository = videoMarkRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.jdbcRatingDao = jdbcRatingDao;
         this.videoHostingApplication = videoHostingApplication;
+        this.configProperties = configProperties;
     }
 
 
@@ -105,6 +115,7 @@ public class MVCVideoHostingController {
                 null,
                 new ArrayList<String>()
         ));
+        model.addAttribute("maxVideoFileSize", configProperties.getMaxFileSize());
         model.addAttribute("formName", "Редактирование видео");
         model.addAttribute("submitButtonName", "Изменить");
         return "upload_video";
@@ -134,6 +145,9 @@ public class MVCVideoHostingController {
             if (videoUploadDTO.getImageFile() == null || videoUploadDTO.getImageFile().isEmpty()) {
                 result.rejectValue("imageFile", "error.imageFile",  "Изображение должно быть выбрано!");
             }
+            if (videoUploadDTO.getImageFile().getSize() > configProperties.getMaxVideoThumbnailSizeMb() * 1024 * 1024) {
+                result.rejectValue("imageFile", "error.imageFile", "Размер изображения слишком велик!");
+            }
             if (videoUploadDTO.getVideoFile() == null || videoUploadDTO.getVideoFile().isEmpty()) {
                 result.rejectValue("videoFile", "error.videoFile", "Видеодорожка должна быть выбрана!");
             }
@@ -153,13 +167,25 @@ public class MVCVideoHostingController {
             }
         }
 
+        if ((videoUploadDTO.getVideoFile() != null && !videoUploadDTO.getVideoFile().isEmpty()) && !VideoValidator.isValidVideo(videoUploadDTO.getVideoFile())) {
+            result.rejectValue("videoFile", "error.videoFile", "Видеодорожка некорректная! Ожидается контейнер H264 или VP9");
+        }
+
+        if((videoUploadDTO.getImageFile() != null && !videoUploadDTO.getImageFile().isEmpty())  && !ImageValidator.isValidImage(videoUploadDTO.getImageFile())) {
+            result.rejectValue("imageFile", "error.imageFile", "Неверный формат изображения или оно повреждено!");
+        }
+
+        if (result.hasErrors()) {
+            return "upload_video";
+        }
+
         String imagePath = null;
         if (videoUploadDTO.getImageFile() != null && !videoUploadDTO.getImageFile().isEmpty()) {
-            imagePath = this.storageService.store(videoUploadDTO.getImageFile(), ContentMultimediaType.VIDEO_IMAGE);
+            imagePath = this.hybridStorageService.store(videoUploadDTO.getImageFile(), ContentMultimediaType.VIDEO_IMAGE);
         }
         String videoPath = null;
         if (videoUploadDTO.getVideoFile() != null && !videoUploadDTO.getVideoFile().isEmpty()) {
-            videoPath = this.storageService.store(videoUploadDTO.getVideoFile(), ContentMultimediaType.VIDEO);
+            videoPath = this.hybridStorageService.store(videoUploadDTO.getVideoFile(), ContentMultimediaType.VIDEO);
         }
 
 
@@ -180,49 +206,6 @@ public class MVCVideoHostingController {
         if (optionalUser.isPresent()) {
             video.setAuthor(optionalUser.get());
             video.setIsBlocked(false);
-            videoRepository.save(video);
-            return String.format("redirect:/video/%d", video.getVideoId());
-        }
-        return "redirect:/upload_video?error"; //DEBUG
-    }
-
-
-    @PostMapping("/video_edit")
-    public String editVideo(@RequestParam("video") VideoUploadDTO videoUploadDTO,
-                              BindingResult result,
-                              Principal principal) {
-
-        if (principal == null) {
-            return "redirect:/404";
-        }
-
-        if (result.hasErrors()) {
-            return "redirect:/upload_video?error";
-        }
-
-
-        String imagePath = this.storageService.store(videoUploadDTO.getVideoFile(), ContentMultimediaType.VIDEO_IMAGE);
-        String videoPath = this.storageService.store(videoUploadDTO.getImageFile(), ContentMultimediaType.VIDEO);
-
-
-        Video video = new Video();
-        video.setTitle(videoUploadDTO.getTitle());
-        video.setDescription(videoUploadDTO.getDescription());
-        video.setVideoPath(videoPath);
-        video.setImagePath(imagePath);
-
-        Set<MultimediaClass> multimediaClasses = multimediaClassRepository.
-                findAllByMultimediaClassNameIn(videoUploadDTO.getClassesString());
-
-        if (multimediaClasses.isEmpty()) {
-            result.rejectValue("classesString", "Должен быть выбран хотя бы один класс");
-            return "redirect:/upload_video?error";
-        }
-
-        video.setMultimediaClasses(multimediaClasses);
-        Optional<User> optionalUser = userRepository.findByLogin(principal.getName());
-        if (optionalUser.isPresent()) {
-            video.setAuthor(optionalUser.get());
             videoRepository.save(video);
             return String.format("redirect:/video/%d", video.getVideoId());
         }
@@ -259,10 +242,10 @@ public class MVCVideoHostingController {
         videoRepository.softDeleteVideo(videoId);
         try {
             if (videoPath != null) {
-                storageService.deleteFile(videoPath);
+                hybridStorageService.deleteFile(videoPath);
             }
             if (imagePath != null) {
-                storageService.deleteFile(imagePath);
+                hybridStorageService.deleteFile(imagePath);
             }
         } catch (RuntimeException e) {
             System.out.println("Ошибка удаления видео: " + video.getVideoPath());

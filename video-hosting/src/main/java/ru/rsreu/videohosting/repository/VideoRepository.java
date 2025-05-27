@@ -20,6 +20,9 @@ public interface VideoRepository extends JpaRepository<Video, Long>, VideoReposi
     @Query("SELECT count(v) FROM Video v WHERE v.author = :author AND :classificator MEMBER OF v.multimediaClasses")
     Long countAllByAuthorAndHavingClass(@Param("author") User author, @Param("classificator") MultimediaClass classificator);
 
+    @Query("SELECT count(v) FROM Video v WHERE v.author = :author AND :classificator MEMBER OF v.multimediaClasses and v.isDeleted = false")
+    Long countAllByAuthorAndHavingClassAndNotDeleted(@Param("author") User author, @Param("classificator") MultimediaClass classificator);
+
     @Modifying
     @Query("UPDATE Video v SET v.isBlocked = :isBlocked WHERE v.videoId = :videoId")
     void updateBlockedStatus(@Param("videoId") Long videoId, @Param("isBlocked") Boolean isBlocked);

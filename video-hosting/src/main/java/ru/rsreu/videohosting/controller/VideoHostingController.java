@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.rsreu.videohosting.config.ConfigProperties;
 import ru.rsreu.videohosting.dao.JdbcRatingDao;
 import ru.rsreu.videohosting.dto.IStringBooleanDto;
 import ru.rsreu.videohosting.dto.UserProfileDTO;
@@ -38,6 +39,7 @@ public class VideoHostingController {
     private final MultimediaClassRepository multimediaClassRepository;
 
     private final RoleAssignmentRepository roleAssignmentRepository;
+    private final ConfigProperties configProperties;
 
     public VideoHostingController(@Autowired VideoRepository videoRepository,
                                   @Autowired MarkRepository markRepository,
@@ -47,7 +49,7 @@ public class VideoHostingController {
                                   @Autowired JdbcRatingDao jdbcRatingDao,
                                   @Autowired MultimediaClassRepository multimediaClassRepository,
                                   @Autowired PlaylistRepository playlistRepository,
-                                  @Autowired BoostDetectionService boostDetectionService, RoleAssignmentRepository roleAssignmentRepository) {
+                                  @Autowired BoostDetectionService boostDetectionService, RoleAssignmentRepository roleAssignmentRepository, ConfigProperties configProperties) {
         this.videoViewsRepository = videoViewsRepository;
         this.userRepository = userRepository;
         this.userService = userService;
@@ -55,6 +57,7 @@ public class VideoHostingController {
         this.multimediaClassRepository = multimediaClassRepository;
         this.playlistRepository = playlistRepository;
         this.roleAssignmentRepository = roleAssignmentRepository;
+        this.configProperties = configProperties;
     }
 
     @GetMapping("/")
@@ -174,6 +177,10 @@ public class VideoHostingController {
 
             if (!isEmailUnique) {
                 result.rejectValue("email", "email.exists" );
+            }
+
+            if (userProfileEditDto.getImagePath().getSize() > configProperties.getMaxAvatarPhotoSizeMb() * 1024 * 1024) {
+                result.rejectValue("imagePath", "error.imagePath", "Размер изображения слишком велик!");
             }
 
             if (result.hasErrors()) {

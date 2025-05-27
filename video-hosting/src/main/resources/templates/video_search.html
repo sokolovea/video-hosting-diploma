@@ -82,7 +82,7 @@
                 <div>
                     <label for="category">Категория</label>
                     <select id="category" name="category">
-                        <option value="" th:selected="${category == null || category.isEmpty()}">Все категории</option>
+                        <option value="" th:selected="${category == null || category.isEmpty()}">Все классы</option>
                         <option th:each="eachCategory : ${categories}"
                                 th:value="${eachCategory.getMultimediaClassName()}"
                                 th:text="${eachCategory.getMultimediaClassName()}"

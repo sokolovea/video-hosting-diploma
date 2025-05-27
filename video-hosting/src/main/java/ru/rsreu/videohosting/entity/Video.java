@@ -48,12 +48,8 @@ public class Video implements Serializable {
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
-    public String getImagePath() {
-        return '/' + imagePath;
-    }
-
-    public String getVideoPath() {
-        return '/' + videoPath;
+    public boolean isStoredOnS3() {
+        return videoPath.startsWith("http");
     }
 
 }

@@ -54,23 +54,25 @@ public class RoleUpdateService {
             for (MultimediaClass multimediaClass : ratingsByClasses.keySet()) {
                 Double userRating = ratingsByClasses.get(multimediaClass);
                 RoleAssignment assignment = roleAssignmentRepository.findByReceiverAndMultimediaClass(user, multimediaClass);
-                Role newRole = null;
-                if (userRating >= MIN_RATING_TO_BE_EXPERT && !assignment.getRole().getRoleName().equals("EXPERT")) {
-                    newRole = roleRepository.findByRoleName("EXPERT")
-                            .orElseThrow(() -> new IllegalStateException("Роль EXPERT не найдена"));
-                } else if (userRating < (MIN_RATING_TO_BE_EXPERT * COEFFICIENT_RATING_DOWN) && !assignment.getRole().getRoleName().equals("USER")) {
-                    newRole = roleRepository.findByRoleName("USER")
-                            .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
-                } else {
-                    continue;
+                if (assignment != null) {
+                    Role newRole = null;
+                    if (userRating >= MIN_RATING_TO_BE_EXPERT && !assignment.getRole().getRoleName().equals("EXPERT")) {
+                        newRole = roleRepository.findByRoleName("EXPERT")
+                                .orElseThrow(() -> new IllegalStateException("Роль EXPERT не найдена"));
+                    } else if (userRating < (MIN_RATING_TO_BE_EXPERT * COEFFICIENT_RATING_DOWN) && !assignment.getRole().getRoleName().equals("USER")) {
+                        newRole = roleRepository.findByRoleName("USER")
+                                .orElseThrow(() -> new IllegalStateException("Роль USER не найдена"));
+                    } else {
+                        continue;
+                    }
+                    assignment.setRole(newRole);
+
+                    System.out.println("Роль пользователя " + user.getLogin() +
+                            " обновлена на " + newRole.getRoleName() +
+                            " для класса " + assignment.getMultimediaClass().getMultimediaClassName());
+
+                    roleAssignmentRepository.save(assignment);
                 }
-                assignment.setRole(newRole);
-
-                System.out.println("Роль пользователя " + user.getLogin() +
-                        " обновлена на " + newRole.getRoleName() +
-                        " для класса " + assignment.getMultimediaClass().getMultimediaClassName());
-
-                roleAssignmentRepository.save(assignment);
             }
         }
     }

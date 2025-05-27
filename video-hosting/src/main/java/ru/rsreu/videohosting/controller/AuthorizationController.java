@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import ru.rsreu.videohosting.config.ConfigProperties;
 import ru.rsreu.videohosting.dto.LoginDTO;
 import ru.rsreu.videohosting.dto.RegistrationDTO;
 import ru.rsreu.videohosting.service.UserService;
@@ -19,10 +20,12 @@ import javax.validation.Valid;
 public class AuthorizationController {
 
     private final UserService userService;
+    private final ConfigProperties configProperties;
 
     @Autowired
-    public AuthorizationController(UserService userService) {
+    public AuthorizationController(UserService userService, ConfigProperties configProperties) {
         this.userService = userService;
+        this.configProperties = configProperties;
     }
 
     @GetMapping("/register")
@@ -49,6 +52,10 @@ public class AuthorizationController {
                 result.rejectValue("email", "email.exists");
             }
 
+            if (registrationDto.getImagePath().getSize() > configProperties.getMaxAvatarPhotoSizeMb() * 1024 * 1024) {
+                result.rejectValue("imagePath", "error.imagePath", "Размер изображения слишком велик!");
+            }
+
             if (result.hasErrors()) {
                 return "registration";
             }
@@ -69,11 +76,4 @@ public class AuthorizationController {
         model.addAttribute("user", new LoginDTO());
         return "login";
     }
-
-//    @GetMapping("/logout")
-//    public String logoutPage(Model model) {
-//        model.addAttribute("user", new LoginDTO());
-//        return "login";
-//    }
-
 }

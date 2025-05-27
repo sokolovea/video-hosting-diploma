@@ -74,14 +74,14 @@
                 </div>
                 <div class="form-group">
                     <label for="videoFile">Файл видео</label>
-                    <input type="file" th:field="*{videoFile}" id="videoFile" name="videoFile">
+                    <input type="file" th:field="*{videoFile}" id="videoFile" accept=".mp4,.webm" name="videoFile">
                     <span class="validationError"
                           th:if="${#fields.hasErrors('videoFile')}"
                           th:errors="*{videoFile}"></span>
                 </div>
                 <div class="form-group">
                     <label for="imageFile">Фото обложки</label>
-                    <input type="file" th:field="*{imageFile}" id="imageFile" name="imageFile">
+                    <input type="file" th:field="*{imageFile}" accept=".jpeg,.jpg,.png,.svg" id="imageFile" name="imageFile">
                     <span class="validationError"
                           th:if="${#fields.hasErrors('imageFile')}"
                           th:errors="*{imageFile}"></span>
